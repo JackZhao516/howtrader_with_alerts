@@ -220,7 +220,7 @@ class SqliteDatabase(BaseDatabase):
         """load bar data"""
         s: ModelSelect = (
             DbBarData.select().where(
-                (DbBarData.symbol == symbol)
+                (DbBarData.symbol == symbol.lower())
                 & (DbBarData.exchange == exchange.value)
                 & (DbBarData.interval == interval.value)
                 & (DbBarData.datetime >= start)

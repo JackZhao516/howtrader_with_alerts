@@ -521,6 +521,16 @@ class ArrayManager(object):
         """
         return self.open_interest_array
 
+    def vwap(self, array: bool = False):
+        """
+        vwap.
+        """
+        result = np.cumsum(self.volume*(self.high+self.close+self.low)/3) / np.cumsum(self.volume)
+        # print("cum volume: "+str(self.volume))
+        if array:
+            return result
+        return result[-1]
+
     def sma(self, n: int, array: bool = False) -> Union[float, np.ndarray]:
         """
         Simple moving average.
