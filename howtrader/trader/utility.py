@@ -114,6 +114,15 @@ def save_json(filename: str, data: dict) -> None:
         )
 
 
+def clear_json(filename: str) -> None:
+    """
+    Clear data in json file in temp path.
+    """
+    filepath: Path = get_file_path(filename)
+    with open(filepath, mode="w", encoding="UTF-8") as f:
+        f.write("{}")
+
+
 def round_to(value: Union[Decimal, float, int], target: Union[Decimal, float, int]) -> Decimal:
     """
     Round price to price tick value.
@@ -434,7 +443,7 @@ class ArrayManager(object):
     2. calculating technical indicator value
     """
 
-    def __init__(self, size: int = 100) -> None:
+    def __init__(self, size: int = 201) -> None:
         """Constructor"""
         self.count: int = 0
         self.size: int = size
@@ -525,11 +534,14 @@ class ArrayManager(object):
         """
         vwap.
         """
+
         result = np.cumsum(self.volume*(self.high+self.close+self.low)/3) / np.cumsum(self.volume)
-        # print("cum volume: "+str(self.volume))
         if array:
             return result
         return result[-1]
+
+    def cumsum_volume(self):
+        return np.cumsum(self.volume)
 
     def sma(self, n: int, array: bool = False) -> Union[float, np.ndarray]:
         """

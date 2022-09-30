@@ -43,7 +43,7 @@ from howtrader.trader.constant import (
     Offset,
     Status
 )
-from howtrader.trader.utility import load_json, save_json, extract_vt_symbol, round_to
+from howtrader.trader.utility import load_json, save_json, clear_json, extract_vt_symbol, round_to
 from howtrader.trader.converter import OffsetConverter
 from howtrader.trader.database import BaseDatabase, get_database
 
@@ -80,6 +80,7 @@ class CtaEngine(BaseEngine):
 
     setting_filename: str = "cta_strategy_setting.json"
     data_filename: str = "cta_strategy_data.json"
+    clear_json(setting_filename)
 
     def __init__(self, main_engine: MainEngine, event_engine: EventEngine) -> None:
         """"""
@@ -711,11 +712,13 @@ class CtaEngine(BaseEngine):
         self.call_strategy_func(strategy, strategy.on_init)
 
         # Subscribe market data
+        self.write_log(f"subscribe market data for {strategy_name}")
         contract: Optional[ContractData] = self.main_engine.get_contract(strategy.vt_symbol)
         if contract:
             req: SubscribeRequest = SubscribeRequest(
                 symbol=contract.symbol, exchange=contract.exchange)
             self.main_engine.subscribe(req, contract.gateway_name)
+            # self.write_log(f"gateway {contract.gateway_name}")
         else:
             self.write_log(f"failed to subscribe market data, symbol not found: {strategy.vt_symbol}", strategy)
 
@@ -841,6 +844,7 @@ class CtaEngine(BaseEngine):
                 value = getattr(module, name)
                 if (isinstance(value, type) and issubclass(value, CtaTemplate) and value is not CtaTemplate):
                     self.classes[value.__name__] = value
+                    self.write_log(f"strategy class {value.__name__} loaded")
         except:  # noqa
             msg: str = f"strategy module {module_name} failed to load，raise exception: \n{traceback.format_exc()}"
             self.write_log(msg)
@@ -895,6 +899,17 @@ class CtaEngine(BaseEngine):
         for strategy_name in self.strategies.keys():
             futures[strategy_name] = self.init_strategy(strategy_name)
         return futures
+
+    def print_strategy(self):
+        """
+        Print all strategies in engine.
+        """
+        arr = []
+
+        for strategy in self.strategies.values():
+            arr.append(f"{strategy.strategy_name}：{strategy.vt_symbol}")
+
+        return arr
 
     def start_all_strategies(self) -> None:
         """
