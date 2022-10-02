@@ -52,7 +52,7 @@ class Strategy4h1d(CtaTemplate):
     capital = Decimal(10000)
 
     parameters = ["window"]
-    variables = ["ma4h_0", "ma4h_1", "ma1d_0", "ma1d_1", "vwap_0", "vwap_1", "ma4h_count", "ma1d_count", "vwap_count",
+    variables = ["ma4h_0", "ma4h_1", "ma1d_0", "ma1d_1", "vwap_0", "vwap_1",  "ma4h_count", "ma1d_count", "vwap_count",
                  "vwap_timeframe_count", "trend_4h", "capital", "last_trade_condition", "close", "vwap_24", "sma",
                  "vwap_volume", "vwap_high", "vwap_low", "vwap_base", "vwap_base_volume", "close_0", "close_1"]
 
