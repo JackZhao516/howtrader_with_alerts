@@ -72,4 +72,4 @@ def get_coins_with_weekly_volume_increase(volume_threshold=1.3):
     return coins
 
 # print(get_exchanges(100, "ETH"))
-print(get_coins_with_weekly_volume_increase())
+# print(get_coins_with_weekly_volume_increase())
