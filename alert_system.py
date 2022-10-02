@@ -27,7 +27,7 @@ usdt_gateway_setting = {
 
 
 def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
-    num = 4
+    num = 100
     coins = ["USDT", "BTC", "ETH"]
     setting = {}
 

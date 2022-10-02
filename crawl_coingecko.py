@@ -61,8 +61,7 @@ def get_coins_with_weekly_volume_increase(volume_threshold=1.3):
 
         if volume_increase >= volume_threshold:
             res.append([volume_increase, id[1]])
-        if len(res) == 3:
-            break
+
     res = sorted(res, key=lambda x: x[0], reverse=True)
     coins = []
     with open("coins_with_weekly_volume_increase.txt", "w") as f:
