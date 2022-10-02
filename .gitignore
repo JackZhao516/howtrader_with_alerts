@@ -39,3 +39,5 @@ main_window.spec
 *.json
 *.db
 examples/howtrader/*
+
+coins_with_weekly_volume_increase.txt

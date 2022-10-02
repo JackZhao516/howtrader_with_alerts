@@ -70,20 +70,20 @@ class Strategy4h1h(CtaTemplate):
         """
         Callback when strategy is inited.
         """
-        self.write_log("策略初始化")
+        self.write_log("Init")
         self.load_bar(30)
 
     def on_start(self):
         """
         Callback when strategy is started.
         """
-        self.write_log("策略启动")
+        self.write_log("Start")
 
     def on_stop(self):
         """
         Callback when strategy is stopped.
         """
-        self.write_log("策略停止")
+        self.write_log("Stop")
 
     def on_tick(self, tick: TickData):
         """

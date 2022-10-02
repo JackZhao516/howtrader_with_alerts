@@ -913,7 +913,7 @@ class BinanceSpotRestAPi(RestClient):
                 begin: datetime = buf[0].datetime
                 end: datetime = buf[-1].datetime
                 msg: str = f"query historical kline data successfully，{req.symbol} - {req.interval.value}，{begin} - {end}"
-                self.gateway.write_log(msg)
+                # self.gateway.write_log(msg)
 
                 # if the data len is less than limit, break the while loop
                 if len(data) < limit:

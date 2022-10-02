@@ -118,10 +118,6 @@ class RestClient(object):
         self.session: ClientSession = ClientSession(trust_env=True)
         self.loop: AbstractEventLoop = None
 
-    # async def _create_client_session(self):
-    #     self.session = ClientSession(trust_env=True)
-
-
     def init(
         self,
         url_base: str,

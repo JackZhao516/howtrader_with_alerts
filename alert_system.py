@@ -10,8 +10,7 @@ from howtrader.trader.engine import MainEngine, LogEngine
 from howtrader.gateway.binance import BinanceSpotGateway, BinanceUsdtGateway
 from howtrader.app.cta_strategy import CtaStrategyApp, CtaEngine
 from howtrader.app.cta_strategy.base import EVENT_CTA_LOG
-# from strategy_4h1h import Strategy4h1h
-from crawl_coingecko import get_coins, get_all_exchanges
+from crawl_coingecko import get_exchanges, get_coins_with_weekly_volume_increase, get_all_exchanges
 from telegram_api import send_message
 
 SETTINGS["log.active"] = True
@@ -26,7 +25,40 @@ usdt_gateway_setting = {
         "proxy_port": 0,
     }
 
-def run():
+
+def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
+    num = 4
+    coins = ["USDT", "BTC", "ETH"]
+    setting = {}
+
+    for coin in coins:
+        exchanges = get_exchanges(num, coin)
+        for exchange in exchanges:
+            cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
+
+    cta_engine.init_all_strategies()
+    main_engine.write_log(cta_engine.print_strategy())
+    sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
+
+
+def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
+    coins = ["USDT", "BTC", "ETH"]
+    setting = {}
+    symbols = get_coins_with_weekly_volume_increase()
+    exchanges = get_all_exchanges()
+    count = 0
+    for coin in coins:
+        for symbol in symbols:
+            if f"{symbol}{coin}" in exchanges:
+                cta_engine.add_strategy("Strategy4h1d", f"500_{symbol}{coin}_4h1d", f"{symbol.lower()}{coin.lower()}.BINANCE", setting)
+                count += 1
+
+    cta_engine.init_all_strategies()
+    main_engine.write_log(cta_engine.print_strategy())
+    sleep(40 * count * 3)  # Leave enough time to complete strategy initialization
+
+
+def run(mode="alert_100"):
     """
     Running in the child process.
     """
@@ -44,31 +76,17 @@ def run():
 
     main_engine.connect(usdt_gateway_setting, "BINANCE_SPOT")
     main_engine.write_log("connect binance spot gate way")
-    exchanges = get_all_exchanges()
     sleep(2)
 
     cta_engine.init_engine()
     main_engine.write_log("set up cta engine")
-
     send_message("start cta strategy")
-    num = 100
-    count_usdt, count_eth = 0, 0
-    for symbol in get_coins(200):
-        setting = {}
-        if count_usdt < num and f"{symbol}USDT" in exchanges:
-            if symbol != "USDT":
-                cta_engine.add_strategy("Strategy4h12h", f"{symbol}USDT_4h12h", f"{symbol.lower()}usdt.BINANCE", setting)
-                count_usdt += 1
-        if count_eth < num and f"{symbol}ETH" in exchanges:
-            if symbol != "ETH":
-                cta_engine.add_strategy("Strategy4h12h", f"{symbol}ETH_4h12h", f"{symbol.lower()}eth.BINANCE", setting)
-                count_eth += 1
-        if count_usdt >= num and count_eth >= num:
-            break
 
-    cta_engine.init_all_strategies()
-    main_engine.write_log(cta_engine.print_strategy())
-    sleep(8000)   # Leave enough time to complete strategy initialization
+    if mode == "alert_100":
+        alert_100(cta_engine, main_engine)
+    elif mode == "alert_500":
+        alert_500(cta_engine, main_engine)
+
     main_engine.write_log("init cta strategies")
 
     cta_engine.start_all_strategies()
@@ -77,5 +95,7 @@ def run():
     while True:
         sleep(10)
 
+
 if __name__ == "__main__":
-    run()
+    # sys.argv[1] is the mode
+    run(sys.argv[1])

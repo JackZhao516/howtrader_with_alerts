@@ -14,21 +14,21 @@ import csv
 threshold = 0.001
 
 
-class Strategy4h12h(CtaTemplate):
+class Strategy4h1d(CtaTemplate):
     author = "Jack"
 
     sma = True
     # ma90
-    window = 200
+    window = 100
 
     # _0 is the current value, _1 is the last value
     ma4h_0 = 0.0
     ma4h_1 = 0.0
     ma4h_count = 0
 
-    ma12h_0 = 0.0
-    ma12h_1 = 0.0
-    ma12h_count = 0
+    ma1d_0 = 0.0
+    ma1d_1 = 0.0
+    ma1d_count = 0
 
     close_0 = 0.0
     close_1 = 0.0
@@ -63,8 +63,8 @@ class Strategy4h12h(CtaTemplate):
         self.am1min = ArrayManager()
         self.bg4h = BarGenerator(self.on_bar, 4, self.on_4h_bar, Interval.HOUR)
         self.am4h = ArrayManager()
-        self.bg12h = BarGenerator(self.on_bar, 12, self.on_12h_bar, Interval.HOUR)
-        self.am12h = ArrayManager()
+        self.bg1d = BarGenerator(self.on_bar, 1, self.on_1d_bar, Interval.DAILY)
+        self.am1d = ArrayManager()
         # self.bgvwap = BarGenerator(self.on_bar, 1, self.on_vwap_bar, Interval.HOUR)
         # self.amvwap = ArrayManager()
 
@@ -159,21 +159,21 @@ class Strategy4h12h(CtaTemplate):
         self.ma4h_1 = ma4h[-2]
         self.ma4h_count = 0
 
-    def on_12h_bar(self, bar: BarData):
+    def on_1d_bar(self, bar: BarData):
         """
-        update ma90_12h
+        update ma90_1d
         """
-        self.am12h.update_bar(bar)
-        if not self.am12h.inited:
+        self.am1d.update_bar(bar)
+        if not self.am1d.inited:
             return
         if self.sma:
-            ma12h = self.am12h.sma(self.window, array=True)
+            ma12h = self.am1d.sma(self.window, array=True)
         else:
-            ma12h = self.am12h.ema(self.window, array=True)
+            ma12h = self.am1d.ema(self.window, array=True)
 
-        self.ma12h_0 = ma12h[-1]
-        self.ma12h_1 = ma12h[-2]
-        self.ma12h_count = 0
+        self.ma1d_0 = ma12h[-1]
+        self.ma1d_1 = ma12h[-2]
+        self.ma1d_count = 0
 
         # with open('full_lines.csv', 'a+', encoding='UTF8', newline='') as f:
         #     writer = csv.writer(f)
@@ -231,7 +231,7 @@ class Strategy4h12h(CtaTemplate):
         with open('lines.csv', 'a+', encoding='UTF8', newline='') as f:
             writer = csv.writer(f)
             writer.writerow([date[:20], order, str(self.vwap_1), str(self.vwap_0),
-                             str(self.ma12h_1), str(self.ma12h_0), str(self.ma4h_1),
+                             str(self.ma1d_1), str(self.ma1d_0), str(self.ma4h_1),
                              str(self.ma4h_0)])
 
     def on_1min_bar(self, bar: BarData):
@@ -247,10 +247,10 @@ class Strategy4h12h(CtaTemplate):
         self.close_0 = close[-1]
         self.close_1 = close[-2]
 
-        if self.ma12h_count != 0:
-            self.ma12h_1 = self.ma12h_0
+        if self.ma1d_count != 0:
+            self.ma1d_1 = self.ma1d_0
         else:
-            self.ma12h_count += 1
+            self.ma1d_count += 1
 
         if self.ma4h_count != 0:
             self.ma4h_1 = self.ma4h_0
@@ -281,19 +281,19 @@ class Strategy4h12h(CtaTemplate):
         # if self.inited:
         if self.close_0 > self.ma4h_0 and self.close_1 < self.ma4h_1:
             if self.inited:
-                send_message(self.strategy_name + " spot crossover H4 ma200 "+str(bar.datetime)[:19])
+                send_message(self.strategy_name + " spot crossover H4 ma100 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossover H4 ma200 ", str(bar.datetime)[:19])
-        elif self.close_0 < self.ma4h_0 and self.close_1 > self.ma4h_1:
-            if self.inited:
-                send_message(self.strategy_name + " spot crossunder H4 ma200 "+str(bar.datetime)[:19])
+        # elif self.close_0 < self.ma4h_0 and self.close_1 > self.ma4h_1:
+        #     if self.inited:
+        #         send_message(self.strategy_name + " spot crossunder H4 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossunder H4 ma200 ", str(bar.datetime)[:19])
-        if self.close_0 > self.ma12h_0 and self.close_1 < self.ma12h_1:
+        if self.close_0 > self.ma1d_0 and self.close_1 < self.ma1d_1:
             if self.inited:
-                send_message(self.strategy_name + " spot crossover H12 ma200 "+str(bar.datetime)[:19])
+                send_message(self.strategy_name + " spot crossover D1 ma100 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossover H12 ma200 ", str(bar.datetime)[:19])
-        elif self.close_0 < self.ma12h_0 and self.close_1 > self.ma12h_1:
-            if self.inited:
-                send_message(self.strategy_name + " spot crossunder H12 ma200 "+str(bar.datetime)[:19])
+        # elif self.close_0 < self.ma1d_0 and self.close_1 > self.ma1d_1:
+        #     if self.inited:
+        #         send_message(self.strategy_name + " spot crossunder H12 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossunder H12 ma200 ", str(bar.datetime)[:19])
 
         # with open('full_lines.csv', 'a+', encoding='UTF8', newline='') as f:
@@ -310,7 +310,7 @@ class Strategy4h12h(CtaTemplate):
         # print(bar.datetime)
         self.bg4h.update_bar(bar)
         # self.bgvwap.update_bar(bar)
-        self.bg12h.update_bar(bar)
+        self.bg1d.update_bar(bar)
         self.bg1min.update_bar(bar)
 
     def on_order(self, order: OrderData):
