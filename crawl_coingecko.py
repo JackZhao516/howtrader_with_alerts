@@ -1,10 +1,11 @@
 from time import sleep
-
+from telegram_api import send_message
 import requests
 import numpy as np
 from pycoingecko import CoinGeckoAPI
 import datetime
 
+TELEGRAM_CHAT_ID = "-804953236"
 
 def get_exchanges(num, exchange="BTC"):
     cg = CoinGeckoAPI()
@@ -25,6 +26,7 @@ def get_exchanges(num, exchange="BTC"):
             res.append(f"{market_list[coin_index]}{exchange}")
             n += 1
         coin_index += 1
+    send_message(f"{datetime.datetime.now()}: Top {num} exchanges with {exchange}:\n {res}", chat_id=TELEGRAM_CHAT_ID)
     return res
 
 
@@ -54,7 +56,7 @@ def get_coins_with_weekly_volume_increase(volume_threshold=1.3):
     for i, id in enumerate(ids):
         data = cg.get_coin_market_chart_by_id(id=id[0], vs_currency='usd', days=13, interval='daily')
         data = np.array(data['total_volumes'])
-        # print(i)
+        print(i)
         if np.sum(data[:7, 1]) == 0:
             continue
         volume_increase = np.sum(data[7:, 1]) / np.sum(data[:7, 1])
@@ -68,6 +70,7 @@ def get_coins_with_weekly_volume_increase(volume_threshold=1.3):
         for coin in res:
             f.write(f"{coin[1]}: {coin[0]}\n")
             coins.append(coin[1])
+    send_message(f"{datetime.datetime.now()}: Top 500 coins that has weekly volume increase > 30%:\n {res}", chat_id=TELEGRAM_CHAT_ID)
     return coins
 
 # print(get_exchanges(100, "ETH"))
