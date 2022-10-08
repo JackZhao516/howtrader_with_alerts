@@ -5,12 +5,13 @@ import numpy as np
 from pycoingecko import CoinGeckoAPI
 import datetime
 
-# TELEGRAM_CHAT_ID = "-804953236" # PROD
-TELEGRAM_CHAT_ID = "-814886566"  # TEST
+TELEGRAM_CHAT_ID = "-804953236" # PROD
+# TELEGRAM_CHAT_ID = "-814886566"  # TEST
 def get_exchanges(num, exchange="BTC"):
     cg = CoinGeckoAPI()
     exchanges = get_all_exchanges()
     res = []
+    res_dict = {}
     n, coin_index, page = 0, 0, 2
     market_list = cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=200, page=1,
                                        sparkline=False)
@@ -25,8 +26,10 @@ def get_exchanges(num, exchange="BTC"):
             page += 1
             coin_index = 0
         elif market_list[coin_index] != exchange and f"{market_list[coin_index]}{exchange}" in exchanges:
-            res.append(f"{market_list[coin_index]}{exchange}")
-            n += 1
+            if f"{market_list[coin_index]}{exchange}" not in res_dict:
+                res_dict[f"{market_list[coin_index]}{exchange}"] = 1
+                res.append(f"{market_list[coin_index]}{exchange}")
+                n += 1
         coin_index += 1
     send_message(f"{datetime.datetime.now()}: Top {num} exchanges with {exchange}:\n {res}", chat_id=TELEGRAM_CHAT_ID)
     return res
@@ -75,4 +78,7 @@ def get_coins_with_weekly_volume_increase(volume_threshold=1.3):
     send_message(f"{datetime.datetime.now()}: Top 500 coins that has weekly volume increase > 30%:\n {res}", chat_id=TELEGRAM_CHAT_ID)
     return coins
 
-# print(len(get_exchanges(300, exchange="ETH")))
+tmp = get_exchanges(300, exchange="BTC")
+for i, t in enumerate(tmp):
+    if t == "PHBBTC":
+        print(i)

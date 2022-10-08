@@ -57,7 +57,7 @@ def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
             writer = csv.writer(f)
             writer.writerow(exchanges)
         for exchange in exchanges:
-            cta_engine.add_strategy("Strategy12h", f"300_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
+            cta_engine.add_strategy("Strategy12h", f"300_{exchange}_12h", f"{exchange.lower()}.BINANCE", setting)
 
     cta_engine.init_all_strategies()
     main_engine.write_log(cta_engine.print_strategy())
