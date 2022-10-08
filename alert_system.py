@@ -1,4 +1,5 @@
 import sys
+import csv
 from time import sleep
 from datetime import datetime, time
 from logging import INFO
@@ -17,6 +18,9 @@ SETTINGS["log.active"] = True
 SETTINGS["log.level"] = INFO
 SETTINGS["log.console"] = True
 
+
+TELEGRAM_CHAT_ID = "-804953236"    # PROD
+# TELEGRAM_CHAT_ID = "-814886566"  # TEST
 
 usdt_gateway_setting = {
         "key": "ZaipNokA3CkFb0fQsp7D2mqmev9RAHPrgW0SnUXVhReXfgTujN7SJB0Wu4atl20M",
@@ -41,6 +45,25 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
 
 
+def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
+    num = 300
+    coins = ["USDT", "BTC", "ETH"]
+    setting = {}
+
+    for coin in coins:
+        exchanges = get_exchanges(num, coin)
+        name = "300/" + coin + ".csv"
+        with open(name, 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(exchanges)
+        for exchange in exchanges:
+            cta_engine.add_strategy("Strategy12h", f"300_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
+
+    cta_engine.init_all_strategies()
+    main_engine.write_log(cta_engine.print_strategy())
+    sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
+
+
 def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
     coins = ["USDT", "BTC", "ETH"]
     setting = {}
@@ -57,6 +80,31 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
     main_engine.write_log(cta_engine.print_strategy())
     sleep(40 * count * 3)  # Leave enough time to complete strategy initialization
 
+
+def get_300():
+    coins = ["USDT", "BTC", "ETH"]
+    for coin in coins:
+        name = "300/" + coin + ".csv"
+        res = []
+        with open(name, 'r', encoding='UTF8', newline='') as f:
+            reader = csv.reader(f)
+            exchanges = next(reader)
+            for exchange in exchanges:
+                res = get_300_helper(exchange, res)
+
+        send_message(f"Top 300 xxx{coin} exchanges spot over H12 MA200:\n{res}", TELEGRAM_CHAT_ID)
+
+
+def get_300_helper(exchange, res):
+    try:
+        with open("300/" + exchange + ".csv", 'r', encoding='UTF8', newline='') as f_tmp:
+            reader_tmp = csv.reader(f_tmp)
+            data = next(reader_tmp)
+            if data[0] == "1":
+                res.append(exchange)
+        return res
+    except:
+        return None
 
 def run(mode="alert_100"):
     """
@@ -86,6 +134,8 @@ def run(mode="alert_100"):
         alert_100(cta_engine, main_engine)
     elif mode == "alert_500":
         alert_500(cta_engine, main_engine)
+    elif mode == "alert_300":
+        alert_300(cta_engine, main_engine)
 
     main_engine.write_log("init cta strategies")
 
@@ -98,4 +148,7 @@ def run(mode="alert_100"):
 
 if __name__ == "__main__":
     # sys.argv[1] is the mode
-    run(sys.argv[1])
+    if sys.argv[1] == "get_300":
+        get_300()
+    else:
+        run(sys.argv[1])

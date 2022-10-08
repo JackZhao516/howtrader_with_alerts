@@ -5,8 +5,8 @@ import numpy as np
 from pycoingecko import CoinGeckoAPI
 import datetime
 
-TELEGRAM_CHAT_ID = "-804953236"
-
+TELEGRAM_CHAT_ID = "-804953236" # PROD
+# TELEGRAM_CHAT_ID = "-814886566"  # TEST
 def get_exchanges(num, exchange="BTC"):
     cg = CoinGeckoAPI()
     exchanges = get_all_exchanges()
