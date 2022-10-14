@@ -30,6 +30,11 @@ usdt_gateway_setting = {
     }
 
 
+last={"ETH":['BNBETH', 'XRPETH', 'SOLETH', 'MATICETH', 'TRXETH', 'UNIETH', 'WBTCETH', 'ATOMETH', 'LTCETH', 'LINKETH', 'ETCETH', 'XLMETH', 'FTTETH', 'XMRETH', 'ALGOETH', 'VETETH', 'APEETH', 'FILETH', 'EGLDETH', 'DASHETH', 'HOTETH', 'ROSEETH', 'GLMETH', 'IOTXETH', 'ONTETH', 'OPETH', 'VGXETH', 'LSKETH', 'PUNDIXETH', 'SNTETH', 'PEOPLEETH', 'GALETH', 'STEEMETH', 'DENTETH', 'RLCETH', 'STRAXETH', 'FUNETH', 'SSVETH', 'QKCETH', 'STMXETH', 'XVGETH', 'BONDETH', 'MFTETH', 'UNFIETH', 'WANETH', 'BELETH', 'BLZETH', 'LITETH', 'KEYETH', 'WINGETH', 'ADXETH', 'UFTETH', 'DEXEETH', 'PROSETH', 'VIBETH', 'BETHETH']
+, "BTC": ['BNBBTC', 'XRPBTC', 'DOGEBTC', 'MATICBTC', 'TRXBTC', 'UNIBTC', 'ATOMBTC', 'LTCBTC', 'LINKBTC', 'XLMBTC', 'XMRBTC', 'ALGOBTC', 'BCHBTC', 'QNTBTC', 'APEBTC', 'EGLDBTC', 'CHZBTC', 'MKRBTC', 'CAKEBTC', 'PAXGBTC', 'NEXOBTC', 'ENSBTC', 'RVNBTC', 'COMPBTC', 'TWTBTC', 'CVXBTC', 'DCRBTC', 'GMXBTC', 'BTGBTC', 'GLMBTC', 'IOTXBTC', 'SUSHIBTC', 'YFIBTC', 'LPTBTC', 'POLYBTC', 'FLUXBTC', 'HIVEBTC', 'INJBTC', 'VGXBTC', 'RENBTC', 'COTIBTC', 'API3BTC', 'SNTBTC', 'SYSBTC', 'PROMBTC', 'PYRBTC', 'STRAXBTC', 'ARDRBTC', 'MBOXBTC', 'STEEMBTC', 'RADBTC', 'CTSIBTC', 'RLCBTC', 'SSVBTC', 'QKCBTC', 'CTKBTC', 'XVSBTC', 'STPTBTC', 'DOCKBTC', 'STMXBTC', 'ANTBTC', 'SANTOSBTC', 'STGBTC', 'FETBTC', 'AERGOBTC', 'DODOBTC', 'DUSKBTC', 'UTKBTC', 'NEBLBTC', 'ALPHABTC', 'AGIXBTC']
+, "USDT": ['BNBUSDT', 'XRPUSDT', 'MATICUSDT', 'ATOMUSDT', 'LINKUSDT', 'XLMUSDT', 'ALGOUSDT', 'LUNCUSDT', 'QNTUSDT', 'CHZUSDT', 'MKRUSDT', 'CAKEUSDT', 'NEXOUSDT', 'ENSUSDT', 'RVNUSDT', 'LUNAUSDT', 'COMPUSDT', 'GMXUSDT', 'RSRUSDT', 'SUSHIUSDT', 'POLYUSDT', 'FLUXUSDT', 'INJUSDT', 'VGXUSDT', 'COTIUSDT', 'REEFUSDT', 'PYRUSDT', 'TRIBEUSDT', 'RLCUSDT', 'SANTOSUSDT', 'STGUSDT', 'ERNUSDT', 'ALPACAUSDT', 'SFPUSDT', 'FORTHUSDT', 'ALPINEUSDT', 'LAZIOUSDT', 'VITEUSDT', 'CITYUSDT', 'BARUSDT', 'LEVERUSDT', 'BEAMUSDT']}
+
+
 def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     num = 100
     coins = ["USDT", "BTC", "ETH"]
@@ -45,23 +50,26 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
 
 
-def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
+def alert_300(cta_engine: CtaEngine, main_engine: MainEngine, coin="USDT"):
     num = 300
-    coins = ["USDT", "BTC", "ETH"]
+    # coins = ["USDT", "BTC", "ETH"]
+    # coins = ["ETH"]
     setting = {}
 
-    for coin in coins:
-        exchanges = get_exchanges(num, coin)
-        name = "300/" + coin + ".csv"
-        with open(name, 'w', encoding='UTF8', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(exchanges)
-        for exchange in exchanges:
-            cta_engine.add_strategy("Strategy12h", f"300_{exchange}_12h", f"{exchange.lower()}.BINANCE", setting)
+    # for coin in coins:
+    exchanges = get_exchanges(num, coin)
+    name = "300/" + coin + ".csv"
+    with open(name, 'w', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(exchanges)
+        print("ETH exchanges count: ", len(exchanges))
+    for exchange in exchanges:
+        cta_engine.add_strategy("Strategy12h", f"300_{exchange}_12h", f"{exchange.lower()}.BINANCE", setting)
 
     cta_engine.init_all_strategies()
     main_engine.write_log(cta_engine.print_strategy())
-    sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
+    # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
+    sleep(40 * num)  # Leave enough time to complete strategy initialization
 
 
 def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
@@ -82,8 +90,17 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
 
 
 def get_300():
-    coins = ["USDT", "BTC", "ETH"]
+    # coins = ["USDT", "BTC", "ETH"]
+    coins = ["ETH"]
     for coin in coins:
+        # last_name = "300/" + coin + "_res.csv"
+        # with open(last_name, 'r', encoding='UTF8', newline='') as f:
+        #     reader = csv.reader(f)
+        #     last_res = next(reader)
+
+        # TODO: remove for next update
+        last_res = last[coin]
+
         name = "300/" + coin + ".csv"
         res = []
         with open(name, 'r', encoding='UTF8', newline='') as f:
@@ -92,7 +109,22 @@ def get_300():
             for exchange in exchanges:
                 res = get_300_helper(exchange, res)
 
+        newly_added = []
+        newly_deleted = []
+        for exchange in res:
+            if exchange not in last_res:
+                newly_added.append(exchange)
+        for exchange in last_res:
+            if exchange not in res:
+                newly_deleted.append(exchange)
+
         send_message(f"Top 300 xxx{coin} exchanges spot over H12 MA200:\n{res}", TELEGRAM_CHAT_ID)
+        send_message(f"Top 300 xxx{coin} exchanges spot over H12 MA200 newly added:\n{newly_added}", TELEGRAM_CHAT_ID)
+        send_message(f"Top 300 xxx{coin} exchanges spot over H12 MA200 newly deleted:\n{newly_deleted}", TELEGRAM_CHAT_ID)
+
+        with open("300/" + coin + "_res.csv", 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(res)
 
 
 def get_300_helper(exchange, res):
@@ -106,7 +138,7 @@ def get_300_helper(exchange, res):
     except:
         return None
 
-def run(mode="alert_100"):
+def run(mode="alert_100", option=None):
     """
     Running in the child process.
     """
@@ -135,7 +167,7 @@ def run(mode="alert_100"):
     elif mode == "alert_500":
         alert_500(cta_engine, main_engine)
     elif mode == "alert_300":
-        alert_300(cta_engine, main_engine)
+        alert_300(cta_engine, main_engine, option)
 
     main_engine.write_log("init cta strategies")
 
@@ -150,5 +182,7 @@ if __name__ == "__main__":
     # sys.argv[1] is the mode
     if sys.argv[1] == "get_300":
         get_300()
+    elif sys.argv[1] == "alert_300":
+        run(sys.argv[1], sys.argv[2])
     else:
         run(sys.argv[1])

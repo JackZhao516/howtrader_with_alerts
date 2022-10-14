@@ -78,7 +78,7 @@ def get_coins_with_weekly_volume_increase(volume_threshold=1.3):
     send_message(f"{datetime.datetime.now()}: Top 500 coins that has weekly volume increase > 30%:\n {res}", chat_id=TELEGRAM_CHAT_ID)
     return coins
 
-tmp = get_exchanges(300, exchange="BTC")
-for i, t in enumerate(tmp):
-    if t == "PHBBTC":
-        print(i)
+# tmp = get_exchanges(300, exchange="BTC")
+# for i, t in enumerate(tmp):
+#     if t == "PHBBTC":
+#         print(i)
