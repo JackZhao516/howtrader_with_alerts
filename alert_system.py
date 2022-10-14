@@ -90,8 +90,8 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
 
 
 def get_300():
-    # coins = ["USDT", "BTC", "ETH"]
-    coins = ["ETH"]
+    coins = ["USDT", "BTC"]
+    # coins = ["ETH"]
     for coin in coins:
         # last_name = "300/" + coin + "_res.csv"
         # with open(last_name, 'r', encoding='UTF8', newline='') as f:
