@@ -50,26 +50,26 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
 
 
-def alert_300(cta_engine: CtaEngine, main_engine: MainEngine, coin="USDT"):
+def alert_300(cta_engine: CtaEngine, main_engine: MainEngine, op="USDT"):
     num = 300
-    # coins = ["USDT", "BTC", "ETH"]
+    coins = ["USDT", "BTC"]
     # coins = ["ETH"]
     setting = {}
 
-    # for coin in coins:
-    exchanges = get_exchanges(num, coin)
-    name = "300/" + coin + ".csv"
-    with open(name, 'w', encoding='UTF8', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(exchanges)
-        print("ETH exchanges count: ", len(exchanges))
-    for exchange in exchanges:
-        cta_engine.add_strategy("Strategy12h", f"300_{exchange}_12h", f"{exchange.lower()}.BINANCE", setting)
+    for coin in coins:
+        exchanges = get_exchanges(num, coin)
+        name = "300/" + coin + ".csv"
+        with open(name, 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(exchanges)
+            print("ETH exchanges count: ", len(exchanges))
+        for exchange in exchanges:
+            cta_engine.add_strategy("Strategy12h", f"300_{exchange}_12h", f"{exchange.lower()}.BINANCE", setting)
 
-    cta_engine.init_all_strategies()
-    main_engine.write_log(cta_engine.print_strategy())
-    # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
-    sleep(40 * num)  # Leave enough time to complete strategy initialization
+        cta_engine.init_all_strategies()
+        main_engine.write_log(cta_engine.print_strategy())
+        # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
+        sleep(40 * num * 2)  # Leave enough time to complete strategy initialization
 
 
 def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
