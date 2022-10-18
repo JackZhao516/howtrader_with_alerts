@@ -93,13 +93,13 @@ def get_300():
     coins = ["USDT", "BTC"]
     # coins = ["ETH"]
     for coin in coins:
-        # last_name = "300/" + coin + "_res.csv"
-        # with open(last_name, 'r', encoding='UTF8', newline='') as f:
-        #     reader = csv.reader(f)
-        #     last_res = next(reader)
+        last_name = "300/" + coin + "_res.csv"
+        with open(last_name, 'r', encoding='UTF8', newline='') as f:
+            reader = csv.reader(f)
+            last_res = next(reader)
 
         # TODO: remove for next update
-        last_res = last[coin]
+        # last_res = last[coin]
 
         name = "300/" + coin + ".csv"
         res = []
