@@ -8,7 +8,7 @@ from howtrader.app.cta_strategy import (
 from howtrader.trader.object import TickData, BarData, TradeData, OrderData, Interval
 from howtrader.trader.utility import BarGenerator, ArrayManager
 from decimal import Decimal
-from telegram_api import send_message
+from telegram_api import TelegramBot
 import csv
 
 threshold = 0.001
@@ -65,8 +65,7 @@ class Strategy4h12h(CtaTemplate):
         self.am4h = ArrayManager()
         self.bg12h = BarGenerator(self.on_bar, 12, self.on_12h_bar, Interval.HOUR)
         self.am12h = ArrayManager()
-        # self.bgvwap = BarGenerator(self.on_bar, 1, self.on_vwap_bar, Interval.HOUR)
-        # self.amvwap = ArrayManager()
+        self.tg_bot = TelegramBot()
 
     def on_init(self):
         """
@@ -281,19 +280,19 @@ class Strategy4h12h(CtaTemplate):
         # if self.inited:
         if self.close_0 > self.ma4h_0 and self.close_1 < self.ma4h_1:
             if self.inited:
-                send_message(self.strategy_name + " spot crossover H4 ma200 "+str(bar.datetime)[:19])
+                self.tg_bot.send_message(self.strategy_name + " spot crossover H4 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossover H4 ma200 ", str(bar.datetime)[:19])
         elif self.close_0 < self.ma4h_0 and self.close_1 > self.ma4h_1:
             if self.inited:
-                send_message(self.strategy_name + " spot crossunder H4 ma200 "+str(bar.datetime)[:19])
+                self.tg_bot.send_message(self.strategy_name + " spot crossunder H4 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossunder H4 ma200 ", str(bar.datetime)[:19])
         if self.close_0 > self.ma12h_0 and self.close_1 < self.ma12h_1:
             if self.inited:
-                send_message(self.strategy_name + " spot crossover H12 ma200 "+str(bar.datetime)[:19])
+                self.tg_bot.send_message(self.strategy_name + " spot crossover H12 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossover H12 ma200 ", str(bar.datetime)[:19])
         elif self.close_0 < self.ma12h_0 and self.close_1 > self.ma12h_1:
             if self.inited:
-                send_message(self.strategy_name + " spot crossunder H12 ma200 "+str(bar.datetime)[:19])
+                self.tg_bot.send_message(self.strategy_name + " spot crossunder H12 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossunder H12 ma200 ", str(bar.datetime)[:19])
 
         # with open('full_lines.csv', 'a+', encoding='UTF8', newline='') as f:

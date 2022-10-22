@@ -8,7 +8,7 @@ from howtrader.app.cta_strategy import (
 from howtrader.trader.object import TickData, BarData, TradeData, OrderData, Interval
 from howtrader.trader.utility import BarGenerator, ArrayManager
 from decimal import Decimal
-from telegram_api import send_message
+from telegram_api import TelegramBot
 import csv
 
 threshold = 0.001
@@ -65,6 +65,7 @@ class Strategy4h1h(CtaTemplate):
 
         self.bg4h = BarGenerator(self.on_bar, 4, self.on_4h_bar, Interval.HOUR)
         self.am4h = ArrayManager()
+        self.tg_bot = TelegramBot()
 
     def on_init(self):
         """
@@ -272,7 +273,7 @@ class Strategy4h1h(CtaTemplate):
             if bull_4h and self.last_trade_condition != 1 and self.last_trade_condition != 3 and self.pos < threshold:
                 # 4h bull
                 if self.inited:
-                    send_message(self.strategy_name + " long_1 "+str(bar.datetime)[:19])
+                    self.tg_bot.send_message(self.strategy_name + " long_1 "+str(bar.datetime)[:19])
                 print(self.strategy_name + "long_1", str(bar.datetime)[:19])
                 # self.long_order(bar, "1")
                 self.trend_4h = 1
@@ -281,7 +282,7 @@ class Strategy4h1h(CtaTemplate):
             elif bear_4h and self.last_trade_condition != 2 and self.last_trade_condition != 5 and self.pos > -threshold:
                 # 4h bear
                 if self.inited:
-                    send_message(self.strategy_name + " short_2 "+str(bar.datetime)[:19])
+                    self.tg_bot.send_message(self.strategy_name + " short_2 "+str(bar.datetime)[:19])
                 print(self.strategy_name + "short_2", str(bar.datetime)[:19])
                 # self.short_order(bar, "2")
                 self.trend_4h = -1
@@ -290,7 +291,7 @@ class Strategy4h1h(CtaTemplate):
             elif self.trend_4h == 1 and bull_1h and self.last_trade_condition != 3 and self.last_trade_condition != 1 and self.pos < threshold:
                 # in 4h bull zone, 1h bull
                 if self.inited:
-                    send_message(self.strategy_name + " long_3 "+str(bar.datetime)[:19])
+                    self.tg_bot.send_message(self.strategy_name + " long_3 "+str(bar.datetime)[:19])
                 print(self.strategy_name + "long_3", str(bar.datetime)[:19])
                 # self.long_order(bar, "3")
                 self.last_trade_condition = 3
@@ -298,7 +299,7 @@ class Strategy4h1h(CtaTemplate):
             elif self.trend_4h == 1 and bear_1h and self.last_trade_condition != 4:
                 # in 4h bull zone, 1h bear
                 if self.inited:
-                    send_message(self.strategy_name + " close_long_4 "+str(bar.datetime)[:19])
+                    self.tg_bot.send_message(self.strategy_name + " close_long_4 "+str(bar.datetime)[:19])
                 print(self.strategy_name + "close_long_4", str(bar.datetime)[:19])
                 # self.close_all(bar, "4")
                 self.last_trade_condition = 4
@@ -306,7 +307,7 @@ class Strategy4h1h(CtaTemplate):
             elif self.trend_4h == -1 and bear_1h and self.last_trade_condition != 2 and self.last_trade_condition != 5 and self.pos > -threshold:
                 # in 4h bear zone, 1h bear
                 if self.inited:
-                    send_message(self.strategy_name + " short_5 "+str(bar.datetime)[:19])
+                    self.tg_bot.send_message(self.strategy_name + " short_5 "+str(bar.datetime)[:19])
                 print(self.strategy_name + "short_5", str(bar.datetime)[:19])
                 # self.short_order(bar, "5")
                 self.last_trade_condition = 5
@@ -314,7 +315,7 @@ class Strategy4h1h(CtaTemplate):
             elif self.trend_4h == -1 and bull_1h and self.last_trade_condition != 6:
                 # in 4h bear zone, 1h bull
                 if self.inited:
-                    send_message(self.strategy_name + " close_short_6 "+str(bar.datetime)[:19])
+                    self.tg_bot.send_message(self.strategy_name + " close_short_6 "+str(bar.datetime)[:19])
                 print(self.strategy_name + "close_short_6", str(bar.datetime)[:19])
                 # self.close_all(bar, "6")
                 self.last_trade_condition = 6

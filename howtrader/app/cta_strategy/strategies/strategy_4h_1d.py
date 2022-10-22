@@ -8,7 +8,7 @@ from howtrader.app.cta_strategy import (
 from howtrader.trader.object import TickData, BarData, TradeData, OrderData, Interval
 from howtrader.trader.utility import BarGenerator, ArrayManager
 from decimal import Decimal
-from telegram_api import send_message
+from telegram_api import TelegramBot
 import csv
 
 threshold = 0.001
@@ -65,6 +65,7 @@ class Strategy4h1d(CtaTemplate):
         self.am4h = ArrayManager()
         self.bg1d = BarGenerator(self.on_bar, 24, self.on_1d_bar, Interval.HOUR)
         self.am1d = ArrayManager()
+        self.tg_bot = TelegramBot()
 
     def on_init(self):
         """
@@ -158,11 +159,11 @@ class Strategy4h1d(CtaTemplate):
 
         if self.close_0 > self.ma4h_0 and self.close_1 < self.ma4h_1:
             if self.inited:
-                send_message(self.strategy_name + " spot crossover H4 ma100 "+str(bar.datetime)[:19])
+                self.tg_bot.send_message(self.strategy_name + " spot crossover H4 ma100 "+str(bar.datetime)[:19])
 
         if self.close_0 > self.ma1d_0 and self.close_1 < self.ma1d_1:
             if self.inited:
-                send_message(self.strategy_name + " spot crossover D1 ma100 "+str(bar.datetime)[:19])
+                self.tg_bot.send_message(self.strategy_name + " spot crossover D1 ma100 "+str(bar.datetime)[:19])
 
     def on_bar(self, bar: BarData):
         """

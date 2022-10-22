@@ -8,7 +8,7 @@ from howtrader.app.cta_strategy import (
 from howtrader.trader.object import TickData, BarData, TradeData, OrderData, Interval
 from howtrader.trader.utility import BarGenerator, ArrayManager
 from decimal import Decimal
-from telegram_api import send_message
+
 import csv
 
 threshold = 0.001

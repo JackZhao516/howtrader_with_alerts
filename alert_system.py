@@ -11,16 +11,17 @@ from howtrader.trader.engine import MainEngine, LogEngine
 from howtrader.gateway.binance import BinanceSpotGateway, BinanceUsdtGateway
 from howtrader.app.cta_strategy import CtaStrategyApp, CtaEngine
 from howtrader.app.cta_strategy.base import EVENT_CTA_LOG
-from crawl_coingecko import get_exchanges, get_coins_with_weekly_volume_increase, get_all_exchanges
-from telegram_api import send_message
+from crawl_coingecko import CoinGecKo
+from alert_coingecko import CoinGecKo12H
+from telegram_api import TelegramBot
 
 SETTINGS["log.active"] = True
 SETTINGS["log.level"] = INFO
 SETTINGS["log.console"] = True
 
-
-TELEGRAM_CHAT_ID = "-804953236"    # PROD
-# TELEGRAM_CHAT_ID = "-814886566"  # TEST
+PROD = False
+tg_bot = TelegramBot(PROD, alert=False)
+cg = CoinGecKo(PROD)
 
 usdt_gateway_setting = {
         "key": "ZaipNokA3CkFb0fQsp7D2mqmev9RAHPrgW0SnUXVhReXfgTujN7SJB0Wu4atl20M",
@@ -41,7 +42,7 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     setting = {}
 
     for coin in coins:
-        exchanges = get_exchanges(num, coin)
+        exchanges = cg.get_exchanges(num, coin)
         for exchange in exchanges:
             cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
 
@@ -50,33 +51,35 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
 
 
-def alert_300(cta_engine: CtaEngine, main_engine: MainEngine, op="USDT"):
-    num = 300
-    coins = ["USDT", "BTC"]
-    # coins = ["ETH"]
+def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
     setting = {}
+    exchanges = cg.get_exchanges_300()
+    exchanges, coin_ids, coins_symbols = exchanges
+    coins_csv_write = [[coin_ids[i], coins_symbols[i]] for i in range(len(coin_ids))]
+    name = "300/300_exchanges.csv"
+    with open(name, 'w', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(exchanges)
+    name = "300/300_coins.csv"
+    with open(name, 'w', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerows(coins_csv_write)
 
-    for coin in coins:
-        exchanges = get_exchanges(num, coin)
-        name = "300/" + coin + ".csv"
-        with open(name, 'w', encoding='UTF8', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(exchanges)
-            print("ETH exchanges count: ", len(exchanges))
-        for exchange in exchanges:
-            cta_engine.add_strategy("Strategy12h", f"300_{exchange}_12h", f"{exchange.lower()}.BINANCE", setting)
+    print(f"coins len: {len(coin_ids)}, exchanges len: {len(exchanges)}")
+    for exchange in exchanges:
+        cta_engine.add_strategy("Strategy12h", f"300_{exchange}_12h", f"{exchange.lower()}.BINANCE", setting)
 
-        cta_engine.init_all_strategies()
-        main_engine.write_log(cta_engine.print_strategy())
-        # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
-        sleep(40 * num * 2)  # Leave enough time to complete strategy initialization
+    cta_engine.init_all_strategies()
+    main_engine.write_log(cta_engine.print_strategy())
+    # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
+    sleep(40 * len(exchanges))  # Leave enough time to complete strategy initialization
 
 
 def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
     coins = ["USDT", "BTC", "ETH"]
     setting = {}
-    symbols = get_coins_with_weekly_volume_increase()
-    exchanges = get_all_exchanges()
+    symbols = cg.get_coins_with_weekly_volume_increase()
+    exchanges = cg.get_all_exchanges()
     count = 0
     for coin in coins:
         for symbol in symbols:
@@ -90,41 +93,50 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
 
 
 def get_300():
-    coins = ["USDT", "BTC"]
-    # coins = ["ETH"]
-    for coin in coins:
-        last_name = "300/" + coin + "_res.csv"
-        with open(last_name, 'r', encoding='UTF8', newline='') as f:
-            reader = csv.reader(f)
-            last_res = next(reader)
+    # last_name = "300/300_res.csv"
+    # with open(last_name, 'r', encoding='UTF8', newline='') as f:
+    #     reader = csv.reader(f)
+    #     last_res = next(reader)
 
-        # TODO: remove for next update
-        # last_res = last[coin]
+    # TODO: remove for next update
+    last_res = []
+    res = []
+    new_coins = []
+    name = "300/300_coins.csv"
+    with open(name, 'r', encoding='UTF8', newline='') as f:
+        reader = csv.reader(f, delimiter=',')
+        for row in reader:
+            coin_id, coin_symbol = row
+            cg_300 = CoinGecKo12H(coin_id, PROD)
+            if cg_300.alert_spot():
+                res.append(coin_symbol)
+                if cg_300.less_90_days:
+                    new_coins.append(coin_symbol)
+            print(f"res: {len(res)}")
+    name = "300/300_exchanges.csv"
+    with open(name, 'r', encoding='UTF8', newline='') as f:
+        reader = csv.reader(f)
+        exchanges = next(reader)
+        for exchange in exchanges:
+            res = get_300_helper(exchange, res)
 
-        name = "300/" + coin + ".csv"
-        res = []
-        with open(name, 'r', encoding='UTF8', newline='') as f:
-            reader = csv.reader(f)
-            exchanges = next(reader)
-            for exchange in exchanges:
-                res = get_300_helper(exchange, res)
+    newly_added = []
+    newly_deleted = []
+    for exchange in res:
+        if exchange not in last_res:
+            newly_added.append(exchange)
+    for exchange in last_res:
+        if exchange not in res:
+            newly_deleted.append(exchange)
 
-        newly_added = []
-        newly_deleted = []
-        for exchange in res:
-            if exchange not in last_res:
-                newly_added.append(exchange)
-        for exchange in last_res:
-            if exchange not in res:
-                newly_deleted.append(exchange)
+    tg_bot.send_message(f"Top 300 coins/coin exchanges spot over H12 MA200:\n{res}")
+    tg_bot.send_message(f"Top 300 coins spot over H12 MA180 but less than 90 days:\n{new_coins}")
+    tg_bot.send_message(f"Top 300 coins/coin exchanges exchanges spot over H12 MA200 newly added:\n{newly_added}")
+    tg_bot.send_message(f"Top 300 coins/coin exchanges exchanges spot over H12 MA200 newly deleted:\n{newly_deleted}")
 
-        send_message(f"Top 300 xxx{coin} exchanges spot over H12 MA200:\n{res}", TELEGRAM_CHAT_ID)
-        send_message(f"Top 300 xxx{coin} exchanges spot over H12 MA200 newly added:\n{newly_added}", TELEGRAM_CHAT_ID)
-        send_message(f"Top 300 xxx{coin} exchanges spot over H12 MA200 newly deleted:\n{newly_deleted}", TELEGRAM_CHAT_ID)
-
-        with open("300/" + coin + "_res.csv", 'w', encoding='UTF8', newline='') as f:
-            writer = csv.writer(f)
-            writer.writerow(res)
+    with open("300/300_res.csv", 'w', encoding='UTF8', newline='') as f:
+        writer = csv.writer(f)
+        writer.writerow(res)
 
 
 def get_300_helper(exchange, res):
@@ -138,7 +150,8 @@ def get_300_helper(exchange, res):
     except:
         return None
 
-def run(mode="alert_100", option=None):
+
+def run(mode="alert_100"):
     """
     Running in the child process.
     """
@@ -160,14 +173,14 @@ def run(mode="alert_100", option=None):
 
     cta_engine.init_engine()
     main_engine.write_log("set up cta engine")
-    send_message("start cta strategy")
+    tg_bot.send_message("start cta strategy")
 
     if mode == "alert_100":
         alert_100(cta_engine, main_engine)
     elif mode == "alert_500":
         alert_500(cta_engine, main_engine)
     elif mode == "alert_300":
-        alert_300(cta_engine, main_engine, option)
+        alert_300(cta_engine, main_engine)
 
     main_engine.write_log("init cta strategies")
 
@@ -182,7 +195,5 @@ if __name__ == "__main__":
     # sys.argv[1] is the mode
     if sys.argv[1] == "get_300":
         get_300()
-    elif sys.argv[1] == "alert_300":
-        run(sys.argv[1], sys.argv[2])
     else:
         run(sys.argv[1])
