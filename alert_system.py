@@ -19,7 +19,7 @@ SETTINGS["log.active"] = True
 SETTINGS["log.level"] = INFO
 SETTINGS["log.console"] = True
 
-PROD = False
+PROD = True
 tg_bot = TelegramBot(PROD, alert=False)
 cg = CoinGecKo(PROD)
 
