@@ -93,13 +93,13 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
 
 
 def get_300():
-    # last_name = "300/300_res.csv"
-    # with open(last_name, 'r', encoding='UTF8', newline='') as f:
-    #     reader = csv.reader(f)
-    #     last_res = next(reader)
+    last_name = "300/300_res.csv"
+    with open(last_name, 'r', encoding='UTF8', newline='') as f:
+        reader = csv.reader(f)
+        last_res = next(reader)
 
     # TODO: remove for next update
-    last_res = []
+    # last_res = []
     res = []
     new_coins = []
     name = "300/300_coins.csv"
