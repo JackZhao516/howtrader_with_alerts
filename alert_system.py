@@ -173,7 +173,7 @@ def run(mode="alert_100"):
 
     cta_engine.init_engine()
     main_engine.write_log("set up cta engine")
-    tg_bot.send_message("start cta strategy")
+    tg_bot.send_message(f"start {mode}")
 
     if mode == "alert_100":
         alert_100(cta_engine, main_engine)
