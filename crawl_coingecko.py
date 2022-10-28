@@ -78,7 +78,6 @@ class CoinGecKo:
         self.tg_bot.send_message(f"{datetime.datetime.now()}: Top {num} exchanges with {exchange}:\n {res}")
         return res
 
-
     def get_all_exchanges(self):
         api_url = f'https://api.binance.com/api/v3/exchangeInfo'
         response = requests.get(api_url, timeout=10).json()
