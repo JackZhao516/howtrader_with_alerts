@@ -73,6 +73,7 @@ def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
     main_engine.write_log(cta_engine.print_strategy())
     # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
     sleep(40 * len(exchanges))  # Leave enough time to complete strategy initialization
+    get_300()
 
 
 def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
