@@ -7,7 +7,7 @@ class TelegramBot:
     TELEGRAM_CHAT_ID_PROD_SUM = "-804953236"  # PROD Summary
     TELEGRAM_CHAT_ID_TEST = "-814886566"  # TEST
 
-    def __init__(self, prod=True, alert=True):
+    def __init__(self, prod=False, alert=True):
         self.telegram_chat_id = self.TELEGRAM_CHAT_ID_TEST if not prod else \
             (self.TELEGRAM_CHAT_ID_PROD_ALERT if alert else self.TELEGRAM_CHAT_ID_PROD_SUM)
 

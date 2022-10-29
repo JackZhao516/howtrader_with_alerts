@@ -132,7 +132,7 @@ class BinanceSpotGateway(BaseGateway):
         """init"""
         super().__init__(event_engine, gateway_name)
 
-        self.trade_ws_api: "BinanceSpotTradeWebsocketApi" = BinanceSpotTradeWebsocketApi(self)
+        # self.trade_ws_api: "BinanceSpotTradeWebsocketApi" = BinanceSpotTradeWebsocketApi(self)
         self.market_ws_api: "BinanceSpotDataWebsocketApi" = BinanceSpotDataWebsocketApi(self)
         self.rest_api: "BinanceSpotRestAPi" = BinanceSpotRestAPi(self)
 
@@ -193,7 +193,7 @@ class BinanceSpotGateway(BaseGateway):
     def close(self) -> None:
         """close connection from exchange server"""
         self.rest_api.stop()
-        self.trade_ws_api.stop()
+        # self.trade_ws_api.stop()
         self.market_ws_api.stop()
 
     def process_timer_event(self, event: Event) -> None:
@@ -251,7 +251,7 @@ class BinanceSpotRestAPi(RestClient):
         self.gateway: BinanceSpotGateway = gateway
         self.gateway_name: str = gateway.gateway_name
 
-        self.trade_ws_api: BinanceSpotTradeWebsocketApi = self.gateway.trade_ws_api
+        # self.trade_ws_api: BinanceSpotTradeWebsocketApi = self.gateway.trade_ws_api
 
         self.key: str = ""
         self.secret: str = ""
@@ -768,7 +768,7 @@ class BinanceSpotRestAPi(RestClient):
 
         url = WEBSOCKET_TRADE_HOST + self.user_stream_key
 
-        self.trade_ws_api.connect(url, self.proxy_host, self.proxy_port)
+        # self.trade_ws_api.connect(url, self.proxy_host, self.proxy_port)
 
     def on_start_user_stream_failed(self, status_code: int, request: Request):
         self.failed_with_timestamp(request)

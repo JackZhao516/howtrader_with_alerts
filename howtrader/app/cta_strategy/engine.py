@@ -124,6 +124,9 @@ class CtaEngine(BaseEngine):
     def close(self) -> None:
         """"""
         self.stop_all_strategies()
+        strategies = self.strategies.keys()
+        for strategy_name in strategies:
+            self.remove_strategy(strategy_name)
 
     def register_event(self) -> None:
         """"""

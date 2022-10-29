@@ -19,7 +19,7 @@ SETTINGS["log.active"] = True
 SETTINGS["log.level"] = INFO
 SETTINGS["log.console"] = True
 
-PROD = True
+PROD = False
 tg_bot = TelegramBot(PROD, alert=False)
 cg = CoinGecKo(PROD)
 
@@ -37,7 +37,7 @@ last={"ETH":['BNBETH', 'XRPETH', 'SOLETH', 'MATICETH', 'TRXETH', 'UNIETH', 'WBTC
 
 
 def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
-    num = 100
+    num = 1
     coins = ["USDT", "BTC", "ETH"]
     setting = {}
 
@@ -73,7 +73,6 @@ def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
     main_engine.write_log(cta_engine.print_strategy())
     # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
     sleep(40 * len(exchanges))  # Leave enough time to complete strategy initialization
-    get_300()
 
 
 def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
@@ -188,8 +187,22 @@ def run(mode="alert_100"):
     cta_engine.start_all_strategies()
     main_engine.write_log("start cta strategies")
 
-    while True:
+    sleep(10)
+
+    if mode == "alert_100":
         sleep(10)
+        main_engine.write_log("engine close")
+        # cta_engine.close()
+        main_engine.close()
+        run("alert_100")
+    elif mode == "alert_500":
+        sleep(60 * 60 * 24 * 5)
+        main_engine.write_log("engine close")
+        cta_engine.stop_all_strategies()
+        main_engine.close()
+        run("alert_500")
+    elif mode == "alert_300":
+        get_300()
 
 
 if __name__ == "__main__":
