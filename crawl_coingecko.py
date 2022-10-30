@@ -100,7 +100,6 @@ class CoinGecKo:
         for i, id in enumerate(ids):
             data = self.cg.get_coin_market_chart_by_id(id=id[0], vs_currency='usd', days=13, interval='daily')
             data = np.array(data['total_volumes'])
-            print(i)
             if np.sum(data[:7, 1]) == 0:
                 continue
             volume_increase = np.sum(data[7:, 1]) / np.sum(data[:7, 1])

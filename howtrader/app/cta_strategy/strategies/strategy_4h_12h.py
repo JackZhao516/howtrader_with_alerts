@@ -92,56 +92,6 @@ class Strategy4h12h(CtaTemplate):
         """
         self.bg1min.update_tick(tick)
 
-    # def close_all(self, bar: BarData, num):
-    #     """
-    #     close all open orders
-    #     """
-    #     if self.pos < -threshold and not self.close:
-    #         self.capital -= Decimal(bar.close_price)*Decimal(abs(self.pos))
-    #         self.cover(Decimal(bar.close_price), Decimal(abs(self.pos)))
-    #         date = bar.datetime - datetime.timedelta(hours=1)
-    #         self.print("close"+num, str(date), Decimal(abs(self.pos)), bar.close_price)
-    #         self.close = True
-    #         self.last_trade_condition = 0
-    #     elif self.pos > threshold and not self.close:
-    #         self.capital += Decimal(bar.close_price)*Decimal(abs(self.pos))
-    #         # print(bar.datetime)
-    #         if str(bar.datetime) == "2021-12-28 00:59:00-05:00":
-    #             self.sell(Decimal(bar.close_price)-Decimal(0.01), Decimal(abs(self.pos)))
-    #         else:
-    #             self.sell(Decimal(bar.close_price), Decimal(abs(self.pos)))
-    #         date = bar.datetime - datetime.timedelta(hours=1)
-    #         self.print("close"+num, str(date), Decimal(abs(self.pos)), bar.close_price)
-    #         self.close = True
-    #         self.last_trade_condition = 0
-    #
-    # def long_order(self, bar: BarData, num):
-    #     """
-    #     long order
-    #     """
-    #     self.close_all(bar, num)
-    #     volume = Decimal(self.capital) / Decimal(bar.close_price)
-    #     self.buy(Decimal(bar.close_price), Decimal(volume))
-    #     self.capital = 0
-    #     date = bar.datetime - datetime.timedelta(hours=1)
-    #     self.print("long"+num, str(date), volume, bar.close_price)
-    #     self.close = False
-    #
-    # def short_order(self, bar: BarData, num):
-    #     """
-    #     short order
-    #     """
-    #     self.close_all(bar, num)
-    #     volume = Decimal(self.capital) / Decimal(bar.close_price)
-    #     if str(bar.datetime) == "2021-12-28 00:59:00-05:00":
-    #         self.short(Decimal(bar.close_price)-Decimal(0.01), Decimal(volume))
-    #     else:
-    #         self.short(Decimal(bar.close_price), Decimal(volume))
-    #     self.capital *= 2
-    #     date = bar.datetime - datetime.timedelta(hours=1)
-    #     self.print('short'+num, str(date), volume, bar.close_price)
-    #     self.close = False
-
     def on_4h_bar(self, bar: BarData):
         """
         update ma90_4h
@@ -173,54 +123,6 @@ class Strategy4h12h(CtaTemplate):
         self.ma12h_0 = ma12h[-1]
         self.ma12h_1 = ma12h[-2]
         self.ma12h_count = 0
-
-        # with open('full_lines.csv', 'a+', encoding='UTF8', newline='') as f:
-        #     writer = csv.writer(f)
-        #     writer.writerow([str(bar.datetime)[:20], str(bar.close_price), str(self.ma12h_1), str(self.ma12h_0),
-        #                      str(self.ma4h_1), str(self.ma4h_0), str(self.close_1), str(self.close_0)])
-        # save line information
-        #
-        # with open('full_lines.csv', 'a+', encoding='UTF8', newline='') as f:
-        #     writer = csv.writer(f)
-        #     writer.writerow([str(bar.datetime)[:20], str(bar.close_price), str(bar.high_price),
-        #                      str(bar.low_price), str(bar.volume), str(self.vwap_1),
-        #                      str(self.vwap_0), str(self.ma1h_1), str(self.ma1h_0),
-        #                      str(self.ma4h_1), str(self.ma4h_0), str(self.vwap_timeframe_count)])
-
-        # print("ma1h"+str(bar.datetime) + str(self.ma1h_0)+ "   " + str(self.ma1h_1))
-        # print("ma4h"+str(bar.datetime) + str(self.ma4h_0) + "   " + str(self.ma4h_1))
-        # print("vwap"+str(bar.datetime) + str(self.vwap_0) + "   " + str(self.vwap_1))
-
-    # def on_vwap_bar(self, bar: BarData):
-    #     """
-    #     update vwap
-    #     """
-    #     # flush the vwap data every 24 hours, i.e. every day
-    #     if self.vwap_timeframe_count == 23:
-    #         self.amvwap = ArrayManager()
-    #         self.vwap_timeframe_count = 0
-    #     else:
-    #         self.vwap_timeframe_count += 1
-    #     # # print(str(self.vwap_timeframe_count)+"  "+str(bar.datetime))
-    #     self.amvwap.update_bar(bar)
-    #
-    #     self.vwap_base_volume = self.amvwap.cumsum_volume()[0]
-    #     # print("volume", self.vwap_base_volume)
-    #     vwap = self.amvwap.vwap(array=True)
-    #     # print("vwap", vwap)
-    #
-    #     # self.vwap_24 stores the last hour vwap for last day.
-    #     self.vwap_0 = vwap[-1]
-    #     # self.vwap_1 = vwap[-2]
-    #     if self.vwap_timeframe_count == 0:
-    #         self.vwap_1 = self.vwap_24
-    #     else:
-    #         self.vwap_1 = vwap[-2]
-    #     if self.vwap_timeframe_count == 23:
-    #         self.vwap_24 = vwap[-1]
-    #     # # print("vwap"+str(bar.datetime) + str(self.vwap_0) + "   " + str(self.vwap_1))
-    #     self.vwap_count = 0
-    #     self.vwap_base = self.vwap_0
 
     def print(self, order, date, volume, price):
         """
@@ -256,21 +158,6 @@ class Strategy4h12h(CtaTemplate):
         else:
             self.ma4h_count += 1
 
-
-
-        # if self.vwap_count != 0:
-        #     # print("bar", bar.volume)
-        #     self.vwap_volume += bar.volume
-        #     self.vwap_high = max(self.vwap_high, bar.high_price)
-        #     self.vwap_low = min(self.vwap_low, bar.low_price)
-        #     self.vwap_1 = self.vwap_0
-        #     self.vwap_0 = (self.vwap_base * self.vwap_base_volume + (self.vwap_high + self.vwap_low + bar.close_price) * self.vwap_volume/3)/(self.vwap_base_volume + self.vwap_volume)
-        # else:
-        #     self.vwap_count += 1
-        #     self.vwap_volume = 0.0
-        #     self.vwap_high = 0.0
-        #     self.vwap_low = 10000.0
-
         # if str(bar.datetime) == "2021-10-28 00:01:00-04:00":
         #     print("0", self.vwap_0, self.vwap_1, self.ma4h_0, self.ma4h_1, self.ma1h_0, self.ma1h_1)
         # if str(bar.datetime) == "2021-10-28 00:59:00-04:00":
@@ -280,19 +167,19 @@ class Strategy4h12h(CtaTemplate):
         # if self.inited:
         if self.close_0 > self.ma4h_0 and self.close_1 < self.ma4h_1:
             if self.inited:
-                self.tg_bot.send_message(self.strategy_name + " spot crossover H4 ma200 "+str(bar.datetime)[:19])
+                self.tg_bot.safe_send_message(self.strategy_name + " spot crossover H4 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossover H4 ma200 ", str(bar.datetime)[:19])
         elif self.close_0 < self.ma4h_0 and self.close_1 > self.ma4h_1:
             if self.inited:
-                self.tg_bot.send_message(self.strategy_name + " spot crossunder H4 ma200 "+str(bar.datetime)[:19])
+                self.tg_bot.safe_send_message(self.strategy_name + " spot crossunder H4 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossunder H4 ma200 ", str(bar.datetime)[:19])
         if self.close_0 > self.ma12h_0 and self.close_1 < self.ma12h_1:
             if self.inited:
-                self.tg_bot.send_message(self.strategy_name + " spot crossover H12 ma200 "+str(bar.datetime)[:19])
+                self.tg_bot.safe_send_message(self.strategy_name + " spot crossover H12 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossover H12 ma200 ", str(bar.datetime)[:19])
         elif self.close_0 < self.ma12h_0 and self.close_1 > self.ma12h_1:
             if self.inited:
-                self.tg_bot.send_message(self.strategy_name + " spot crossunder H12 ma200 "+str(bar.datetime)[:19])
+                self.tg_bot.safe_send_message(self.strategy_name + " spot crossunder H12 ma200 "+str(bar.datetime)[:19])
             # print(self.strategy_name + " spot crossunder H12 ma200 ", str(bar.datetime)[:19])
 
         # with open('full_lines.csv', 'a+', encoding='UTF8', newline='') as f:

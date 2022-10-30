@@ -1,6 +1,5 @@
 import sys
 import csv
-import threading
 from time import sleep
 from datetime import datetime, time
 from logging import INFO
@@ -102,7 +101,7 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
         symbols = cg.get_coins_with_weekly_volume_increase()
         exchanges = cg.get_all_exchanges()
         # TODO： fot test
-        exchanges = exchanges[:10]
+        symbols = symbols[:10]
         count = 0
         for coin in coins:
             for symbol in symbols:
@@ -208,8 +207,6 @@ def run(mode="alert_100"):
         alert_500(cta_engine, main_engine)
     elif mode == "alert_300":
         alert_300(cta_engine, main_engine)
-
-
 
     sleep(10)
 
