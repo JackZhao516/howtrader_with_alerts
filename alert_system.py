@@ -1,5 +1,6 @@
 import sys
 import csv
+import threading
 from time import sleep
 from datetime import datetime, time
 from logging import INFO
@@ -37,59 +38,86 @@ last={"ETH":['BNBETH', 'XRPETH', 'SOLETH', 'MATICETH', 'TRXETH', 'UNIETH', 'WBTC
 
 
 def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
-    num = 1
-    coins = ["USDT", "BTC", "ETH"]
-    setting = {}
+    main_engine.write_log("init cta strategies")
+    while True:
+        num = 10
+        coins = ["USDT", "BTC", "ETH"]
+        # coins = ["USDT"]
+        setting = {}
 
-    for coin in coins:
-        exchanges = cg.get_exchanges(num, coin)
-        for exchange in exchanges:
-            cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
+        for coin in coins:
+            exchanges = cg.get_exchanges(num, coin)
+            for exchange in exchanges:
+                cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
 
-    cta_engine.init_all_strategies()
-    main_engine.write_log(cta_engine.print_strategy())
-    sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
+        cta_engine.init_all_strategies()
+        main_engine.write_log(cta_engine.print_strategy())
+        sleep(50 * num * len(coins))  # Leave enough time to complete strategy initialization
+
+        cta_engine.start_all_strategies()
+        main_engine.write_log("start cta strategies")
+        sleep(300)  # 3 days
+        cta_engine.close()
+        main_engine.write_log("re-run alert_300")
 
 
 def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
-    setting = {}
-    exchanges = cg.get_exchanges_300()
-    exchanges, coin_ids, coins_symbols = exchanges
-    coins_csv_write = [[coin_ids[i], coins_symbols[i]] for i in range(len(coin_ids))]
-    name = "300/300_exchanges.csv"
-    with open(name, 'w', encoding='UTF8', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerow(exchanges)
-    name = "300/300_coins.csv"
-    with open(name, 'w', encoding='UTF8', newline='') as f:
-        writer = csv.writer(f)
-        writer.writerows(coins_csv_write)
+    while True:
+        setting = {}
+        exchanges = cg.get_exchanges_300()
+        exchanges, coin_ids, coins_symbols = exchanges
+        coins_csv_write = [[coin_ids[i], coins_symbols[i]] for i in range(len(coin_ids))]
+        name = "300/300_exchanges.csv"
+        with open(name, 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerow(exchanges)
+        name = "300/300_coins.csv"
+        with open(name, 'w', encoding='UTF8', newline='') as f:
+            writer = csv.writer(f)
+            writer.writerows(coins_csv_write)
 
-    print(f"coins len: {len(coin_ids)}, exchanges len: {len(exchanges)}")
-    for exchange in exchanges:
-        cta_engine.add_strategy("Strategy12h", f"300_{exchange}_12h", f"{exchange.lower()}.BINANCE", setting)
+        print(f"coins len: {len(coin_ids)}, exchanges len: {len(exchanges)}")
+        for exchange in exchanges:
+            cta_engine.add_strategy("Strategy12h", f"300_{exchange}_12h", f"{exchange.lower()}.BINANCE", setting)
 
-    cta_engine.init_all_strategies()
-    main_engine.write_log(cta_engine.print_strategy())
-    # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
-    sleep(40 * len(exchanges))  # Leave enough time to complete strategy initialization
+        cta_engine.init_all_strategies()
+        main_engine.write_log(cta_engine.print_strategy())
+        # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
+        sleep(50 * len(exchanges))  # Leave enough time to complete strategy initialization
+        cta_engine.start_all_strategies()
+        main_engine.write_log("start cta strategies")
+        sleep(10)
+        get_300()
+        sleep(300)
+        cta_engine.close()
+        # sleep(60 * 60 * 24 * 3)  # 3 days
+        sleep(300)
+        main_engine.write_log("re-run alert_300")
 
 
 def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
-    coins = ["USDT", "BTC", "ETH"]
-    setting = {}
-    symbols = cg.get_coins_with_weekly_volume_increase()
-    exchanges = cg.get_all_exchanges()
-    count = 0
-    for coin in coins:
-        for symbol in symbols:
-            if f"{symbol}{coin}" in exchanges:
-                cta_engine.add_strategy("Strategy4h1d", f"500_{symbol}{coin}_4h1d", f"{symbol.lower()}{coin.lower()}.BINANCE", setting)
-                count += 1
+    while True:
+        coins = ["USDT", "BTC", "ETH"]
+        setting = {}
+        symbols = cg.get_coins_with_weekly_volume_increase()
+        exchanges = cg.get_all_exchanges()
+        # TODO： fot test
+        exchanges = exchanges[:10]
+        count = 0
+        for coin in coins:
+            for symbol in symbols:
+                if f"{symbol}{coin}" in exchanges:
+                    cta_engine.add_strategy("Strategy4h1d", f"500_{symbol}{coin}_4h1d", f"{symbol.lower()}{coin.lower()}.BINANCE", setting)
+                    count += 1
 
-    cta_engine.init_all_strategies()
-    main_engine.write_log(cta_engine.print_strategy())
-    sleep(40 * count * 3)  # Leave enough time to complete strategy initialization
+        cta_engine.init_all_strategies()
+        main_engine.write_log(cta_engine.print_strategy())
+        sleep(50 * count * 3)  # Leave enough time to complete strategy initialization
+        cta_engine.start_all_strategies()
+        main_engine.write_log("start cta strategies")
+        sleep(300)  # 3 days
+        cta_engine.close()
+        main_engine.write_log("re-run alert_500")
 
 
 def get_300():
@@ -156,7 +184,6 @@ def run(mode="alert_100"):
     Running in the child process.
     """
     SETTINGS["log.file"] = True
-
     event_engine = EventEngine()
     main_engine: MainEngine = MainEngine(event_engine)
     main_engine.add_gateway(BinanceSpotGateway)
@@ -182,27 +209,24 @@ def run(mode="alert_100"):
     elif mode == "alert_300":
         alert_300(cta_engine, main_engine)
 
-    main_engine.write_log("init cta strategies")
 
-    cta_engine.start_all_strategies()
-    main_engine.write_log("start cta strategies")
 
     sleep(10)
 
-    if mode == "alert_100":
-        sleep(10)
-        main_engine.write_log("engine close")
-        # cta_engine.close()
-        main_engine.close()
-        run("alert_100")
-    elif mode == "alert_500":
-        sleep(60 * 60 * 24 * 5)
-        main_engine.write_log("engine close")
-        cta_engine.stop_all_strategies()
-        main_engine.close()
-        run("alert_500")
-    elif mode == "alert_300":
-        get_300()
+    # if mode == "alert_100":
+    #     sleep(10)
+    #     main_engine.write_log("engine close")
+    #     cta_engine.close()
+    #     main_engine.close()
+    #     run("alert_100")
+    # elif mode == "alert_500":
+    #     sleep(60 * 60 * 24 * 5)
+    #     main_engine.write_log("engine close")
+    #     cta_engine.stop_all_strategies()
+    #     main_engine.close()
+    #     run("alert_500")
+    # elif mode == "alert_300":
+    #     get_300()
 
 
 if __name__ == "__main__":
