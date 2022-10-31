@@ -20,10 +20,10 @@ SETTINGS["log.level"] = INFO
 SETTINGS["log.console"] = True
 
 # Prod mode
-PROD = True
+SETTINGS["PROD"] = True
 
-tg_bot = TelegramBot(PROD, alert=False)
-cg = CoinGecKo(PROD)
+tg_bot = TelegramBot(SETTINGS["PROD"], alert=False)
+cg = CoinGecKo(SETTINGS["PROD"])
 
 usdt_gateway_setting = {
         "key": "ZaipNokA3CkFb0fQsp7D2mqmev9RAHPrgW0SnUXVhReXfgTujN7SJB0Wu4atl20M",
@@ -134,7 +134,7 @@ def get_300():
         reader = csv.reader(f, delimiter=',')
         for row in reader:
             coin_id, coin_symbol = row
-            cg_300 = CoinGecKo12H(coin_id, PROD)
+            cg_300 = CoinGecKo12H(coin_id, SETTINGS["PROD"])
             if cg_300.alert_spot():
                 res.append(coin_symbol)
                 if cg_300.less_90_days:
