@@ -39,9 +39,8 @@ last={"ETH":['BNBETH', 'XRPETH', 'SOLETH', 'MATICETH', 'TRXETH', 'UNIETH', 'WBTC
 def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     main_engine.write_log("init cta strategies")
     while True:
-        num = 10
+        num = 100
         coins = ["USDT", "BTC", "ETH"]
-        # coins = ["USDT"]
         setting = {}
 
         for coin in coins:
@@ -55,7 +54,7 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
 
         cta_engine.start_all_strategies()
         main_engine.write_log("start cta strategies")
-        sleep(300)  # 3 days
+        sleep(60 * 60 * 24 * 7)  # 7 days
         cta_engine.close()
         main_engine.write_log("re-run alert_300")
 
@@ -89,8 +88,7 @@ def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
         get_300()
         sleep(300)
         cta_engine.close()
-        # sleep(60 * 60 * 24 * 3)  # 3 days
-        sleep(300)
+        sleep(60 * 60 * 24 * 3)  # 3 days
         main_engine.write_log("re-run alert_300")
 
 
@@ -101,7 +99,7 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
         symbols = cg.get_coins_with_weekly_volume_increase()
         exchanges = cg.get_all_exchanges()
         # TODO： fot test
-        symbols = symbols[:10]
+        # symbols = symbols[:10]
         count = 0
         for coin in coins:
             for symbol in symbols:
@@ -114,7 +112,7 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
         sleep(50 * count * 3)  # Leave enough time to complete strategy initialization
         cta_engine.start_all_strategies()
         main_engine.write_log("start cta strategies")
-        sleep(300)  # 3 days
+        sleep(60 * 60 * 24 * 7)  # 7 days
         cta_engine.close()
         main_engine.write_log("re-run alert_500")
 
@@ -209,21 +207,6 @@ def run(mode="alert_100"):
         alert_300(cta_engine, main_engine)
 
     sleep(10)
-
-    # if mode == "alert_100":
-    #     sleep(10)
-    #     main_engine.write_log("engine close")
-    #     cta_engine.close()
-    #     main_engine.close()
-    #     run("alert_100")
-    # elif mode == "alert_500":
-    #     sleep(60 * 60 * 24 * 5)
-    #     main_engine.write_log("engine close")
-    #     cta_engine.stop_all_strategies()
-    #     main_engine.close()
-    #     run("alert_500")
-    # elif mode == "alert_300":
-    #     get_300()
 
 
 if __name__ == "__main__":

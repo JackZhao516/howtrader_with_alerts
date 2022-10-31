@@ -45,7 +45,7 @@ class CoinGecKo:
             elif f"{symbol}ETH" in exchanges:
                 res.append(f"{symbol}ETH")
 
-        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coins:\n {market_list}")
+        # self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coins:\n {market_list}")
         self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coins that are not on Binance:\n {coingeco_names}")
         self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coin exchanges that are on Binance:\n {res}")
 
@@ -113,6 +113,13 @@ class CoinGecKo:
             for coin in res:
                 f.write(f"{coin[1]}: {coin[0]}\n")
                 coins.append(coin[1])
-        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 500 coins that has weekly volume increase > 30%:\n {res}")
+        print(res)
+        l, r = res[:len(res) // 2], res[len(res) // 2:]
+        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 500 coins that has weekly volume increase > 30%:\n {l}")
+        self.tg_bot.send_message(f"{r}")
         return coins
 
+
+if __name__ == '__main__':
+    coin = CoinGecKo(prod=False)
+    coin.get_coins_with_weekly_volume_increase()
