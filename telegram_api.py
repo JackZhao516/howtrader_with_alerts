@@ -1,5 +1,5 @@
 import requests
-
+from alert_system import PROD
 
 class TelegramBot:
     TOKEN = "5503993388:AAEhkd7Q_b7iYrAowBdC5QsMM35UJl0uknw"
@@ -8,7 +8,7 @@ class TelegramBot:
     TELEGRAM_CHAT_ID_TEST = "-814886566"  # TEST
     MAX_ERROR = 10
 
-    def __init__(self, prod=False, alert=True):
+    def __init__(self, prod=PROD, alert=True):
         self.telegram_chat_id = self.TELEGRAM_CHAT_ID_TEST if not prod else \
             (self.TELEGRAM_CHAT_ID_PROD_ALERT if alert else self.TELEGRAM_CHAT_ID_PROD_SUM)
         self.error = 0
