@@ -15,13 +15,6 @@ from crawl_coingecko import CoinGecKo
 from alert_coingecko import CoinGecKo12H
 from telegram_api import TelegramBot
 
-SETTINGS["log.active"] = True
-SETTINGS["log.level"] = INFO
-SETTINGS["log.console"] = True
-
-# Prod mode
-SETTINGS["PROD"] = True
-
 tg_bot = TelegramBot(SETTINGS["PROD"], alert=False)
 cg = CoinGecKo(SETTINGS["PROD"])
 
@@ -156,7 +149,9 @@ def get_300():
         if exchange not in res:
             newly_deleted.append(exchange)
 
-    tg_bot.send_message(f"Top 300 coins/coin exchanges spot over H12 MA200:\n{res}")
+    l, r = res[:len(res)//2], res[len(res)//2:]
+    tg_bot.send_message(f"Top 300 coins/coin exchanges spot over H12 MA200:\n{l}")
+    tg_bot.send_message(f"{r}")
     tg_bot.send_message(f"Top 300 coins spot over H12 MA180 but less than 90 days:\n{new_coins}")
     tg_bot.send_message(f"Top 300 coins/coin exchanges exchanges spot over H12 MA200 newly added:\n{newly_added}")
     tg_bot.send_message(f"Top 300 coins/coin exchanges exchanges spot over H12 MA200 newly deleted:\n{newly_deleted}")
@@ -212,6 +207,10 @@ def run(mode="alert_100"):
 
 
 if __name__ == "__main__":
+    SETTINGS["log.active"] = True
+    SETTINGS["log.level"] = INFO
+    SETTINGS["log.console"] = True
+
     # sys.argv[1] is the mode
     if sys.argv[1] == "get_300":
         get_300()

@@ -38,16 +38,19 @@ class CoinGecKo:
             if f"{symbol}USDT" not in exchanges and f"{symbol}BTC" not in exchanges and f"{symbol}ETH" not in exchanges:
                 coingeco_coins.append(coin_id)
                 coingeco_names.append(symbol)
-            elif f"{symbol}USDT" in exchanges:
-                res.append(f"{symbol}USDT")
-            elif f"{symbol}BTC" in exchanges:
-                res.append(f"{symbol}BTC")
-            elif f"{symbol}ETH" in exchanges:
-                res.append(f"{symbol}ETH")
+            else:
+                if f"{symbol}USDT" in exchanges:
+                    res.append(f"{symbol}USDT")
+                if f"{symbol}BTC" in exchanges:
+                    res.append(f"{symbol}BTC")
+                if f"{symbol}ETH" in exchanges:
+                    res.append(f"{symbol}ETH")
 
         # self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coins:\n {market_list}")
         self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coins that are not on Binance:\n {coingeco_names}")
-        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coin exchanges that are on Binance:\n {res}")
+        l, r = res[:len(res)//2], res[len(res)//2:]
+        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coin exchanges that are on Binance:\n {l}")
+        self.tg_bot.send_message(f"{r}")
 
         return res, coingeco_coins, coingeco_names
 
