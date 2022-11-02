@@ -139,7 +139,7 @@ def get_300():
         exchanges = next(reader)
         for exchange in exchanges:
             res = get_300_helper(exchange, res)
-
+    print(res)
     newly_added = []
     newly_deleted = []
     for exchange in res:
@@ -174,7 +174,7 @@ def get_300_helper(exchange, res):
                 res.append(exchange)
         return res
     except:
-        return None
+        return res
 
 
 def run(mode="alert_100"):
