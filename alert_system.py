@@ -122,17 +122,17 @@ def get_300():
     # last_res = []
     res = []
     new_coins = []
-    name = "300/300_coins.csv"
-    with open(name, 'r', encoding='UTF8', newline='') as f:
-        reader = csv.reader(f, delimiter=',')
-        for row in reader:
-            coin_id, coin_symbol = row
-            cg_300 = CoinGecKo12H(coin_id, SETTINGS["PROD"])
-            if cg_300.alert_spot():
-                res.append(coin_symbol)
-                if cg_300.less_90_days:
-                    new_coins.append(coin_symbol)
-            print(f"res: {len(res)}")
+    # name = "300/300_coins.csv"
+    # with open(name, 'r', encoding='UTF8', newline='') as f:
+    #     reader = csv.reader(f, delimiter=',')
+    #     for row in reader:
+    #         coin_id, coin_symbol = row
+    #         cg_300 = CoinGecKo12H(coin_id, SETTINGS["PROD"])
+    #         if cg_300.alert_spot():
+    #             res.append(coin_symbol)
+    #             if cg_300.less_90_days:
+    #                 new_coins.append(coin_symbol)
+    #         print(f"res: {len(res)}")
     name = "300/300_exchanges.csv"
     with open(name, 'r', encoding='UTF8', newline='') as f:
         reader = csv.reader(f)
