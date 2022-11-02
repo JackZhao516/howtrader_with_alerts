@@ -76,14 +76,14 @@ def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
         cta_engine.init_all_strategies()
         main_engine.write_log(cta_engine.print_strategy())
         # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
-        sleep(50 * len(exchanges))  # Leave enough time to complete strategy initialization
+        sleep(70 * len(exchanges))  # Leave enough time to complete strategy initialization
         cta_engine.start_all_strategies()
         main_engine.write_log("start cta strategies")
         sleep(10)
         get_300()
-        sleep(300)
+        sleep(60 * 20)  # 20 minutes
         cta_engine.close()
-        sleep(60 * 60 * 24 * 3)  # 3 days
+        sleep(60 * 60 * 24 * 2)  # 2 days
         main_engine.write_log("re-run alert_300")
 
 
@@ -153,8 +153,12 @@ def get_300():
     tg_bot.send_message(f"Top 300 coins/coin exchanges spot over H12 MA200:\n{l}")
     tg_bot.send_message(f"{r}")
     tg_bot.send_message(f"Top 300 coins spot over H12 MA180 but less than 90 days:\n{new_coins}")
-    tg_bot.send_message(f"Top 300 coins/coin exchanges exchanges spot over H12 MA200 newly added:\n{newly_added}")
-    tg_bot.send_message(f"Top 300 coins/coin exchanges exchanges spot over H12 MA200 newly deleted:\n{newly_deleted}")
+    l, r = newly_added[:len(res) // 2], newly_added[len(res) // 2:]
+    tg_bot.send_message(f"Top 300 coins/coin exchanges exchanges spot over H12 MA200 newly added:\n{l}")
+    tg_bot.send_message(f"{r}")
+    l, r = newly_deleted[:len(res) // 2], newly_deleted[len(res) // 2:]
+    tg_bot.send_message(f"Top 300 coins/coin exchanges exchanges spot over H12 MA200 newly deleted:\n{l}")
+    tg_bot.send_message(f"{r}")
 
     with open("300/300_res.csv", 'w', encoding='UTF8', newline='') as f:
         writer = csv.writer(f)

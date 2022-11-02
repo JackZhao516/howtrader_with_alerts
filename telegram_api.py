@@ -18,6 +18,9 @@ class TelegramBot:
         api_url = f'https://api.telegram.org/bot{self.TOKEN}/sendMessage?chat_id={self.telegram_chat_id}&text={message}'
         requests.get(api_url, timeout=10).json()
 
+    # def send_list(self, l):
+    #     n =
+
     def safe_send_message(self, message):
         try:
             self.send_message(message)
