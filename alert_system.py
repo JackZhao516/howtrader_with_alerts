@@ -39,7 +39,7 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
         exchanges = cg.get_exchanges(num=100)
         exchanges, coin_ids, coins_symbols = exchanges
         coins_threads = []
-        for i in range(coin_ids):
+        for i in range(len(coin_ids)):
             coin_id, coin_symbol = coin_ids[i], coins_symbols[i]
             t = threading.Thread(target=alert_100_function, args=(coin_id, coin_symbol, SETTINGS["PROD"]))
             t.start()
