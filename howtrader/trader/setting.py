@@ -40,7 +40,8 @@ SETTINGS: Dict[str, Any] = {
     "database.port": 0,
     "database.user": "",
     "database.password": "",
-    "PROD": True,
+    "PROD": False,
+    "100": True
 }
 
 # Load global setting from json file.

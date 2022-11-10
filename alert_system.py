@@ -1,5 +1,6 @@
 import sys
 import csv
+import threading
 from time import sleep
 from datetime import datetime, time
 from logging import INFO
@@ -12,7 +13,7 @@ from howtrader.gateway.binance import BinanceSpotGateway, BinanceUsdtGateway
 from howtrader.app.cta_strategy import CtaStrategyApp, CtaEngine
 from howtrader.app.cta_strategy.base import EVENT_CTA_LOG
 from crawl_coingecko import CoinGecKo
-from alert_coingecko import CoinGecKo12H
+from alert_coingecko import CoinGecKo12H, alert_100_function
 from telegram_api import TelegramBot
 
 tg_bot = TelegramBot(SETTINGS["PROD"], alert=False)
@@ -34,30 +35,39 @@ last={"ETH":['BNBETH', 'XRPETH', 'SOLETH', 'MATICETH', 'TRXETH', 'UNIETH', 'WBTC
 def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     main_engine.write_log("init cta strategies")
     while True:
-        num = 100
-        coins = ["USDT", "BTC", "ETH"]
         setting = {}
+        exchanges = cg.get_exchanges(num=100)
+        exchanges, coin_ids, coins_symbols = exchanges
+        coins_threads = []
+        for i in range(coin_ids):
+            coin_id, coin_symbol = coin_ids[i], coins_symbols[i]
+            t = threading.Thread(target=alert_100_function, args=(coin_id, coin_symbol, SETTINGS["PROD"]))
+            t.start()
+            coins_threads.append(t)
+            sleep(1)
 
-        for coin in coins:
-            exchanges = cg.get_exchanges(num, coin)
-            for exchange in exchanges:
-                cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
+        for exchange in exchanges:
+            cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
 
         cta_engine.init_all_strategies()
         main_engine.write_log(cta_engine.print_strategy())
-        sleep(50 * num * len(coins))  # Leave enough time to complete strategy initialization
-
+        sleep(60 * len(exchanges))  # Leave enough time to complete strategy initialization
         cta_engine.start_all_strategies()
         main_engine.write_log("start cta strategies")
-        sleep(60 * 60 * 24 * 3)  # 7 days
+        # TODO fix sleep
+        sleep(60 * 60)  # 3 days
         cta_engine.close()
+        SETTINGS["100"] = False
+        for t in coins_threads:
+            t.join()
+        SETTINGS["100"] = True
         main_engine.write_log("re-run alert_300")
 
 
 def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
     while True:
         setting = {}
-        exchanges = cg.get_exchanges_300()
+        exchanges = cg.get_exchanges(num=300)
         exchanges, coin_ids, coins_symbols = exchanges
         coins_csv_write = [[coin_ids[i], coins_symbols[i]] for i in range(len(coin_ids))]
         name = "300/300_exchanges.csv"

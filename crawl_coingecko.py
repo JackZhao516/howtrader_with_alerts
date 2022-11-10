@@ -13,16 +13,20 @@ class CoinGecKo:
         self.cg = CoinGeckoAPI(api_key=self.COINGECKO_API_KEY)
         self.tg_bot = TelegramBot(prod=prod, alert=False)
 
-    def get_exchanges_300(self):
+    def get_exchanges(self, num=300):
         exchanges = self.get_all_exchanges()
         res = []
         coingeco_coins = []
         coingeco_names = []
 
-        market_list = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=150, page=1,
-                                           sparkline=False)
-        market_list += self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=150, page=2,
-                                           sparkline=False)
+        if num == 300:
+            market_list = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=150, page=1,
+                                                    sparkline=False)
+            market_list += self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=150, page=2,
+                                                     sparkline=False)
+        else:
+            market_list = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=100, page=1,
+                                                    sparkline=False)
 
         # ids = [market['id'].upper() for market in market_list]
         markets = [(market['symbol'].upper(), market['id']) for market in market_list]
@@ -47,39 +51,39 @@ class CoinGecKo:
                     res.append(f"{symbol}ETH")
 
         # self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coins:\n {market_list}")
-        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coins that are not on Binance:\n {coingeco_names}")
+        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top {num} coins that are not on Binance:\n {coingeco_names}")
         l, r = res[:len(res)//2], res[len(res)//2:]
-        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 300 coin exchanges that are on Binance:\n {l}")
+        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top {num} coin exchanges that are on Binance:\n {l}")
         self.tg_bot.send_message(f"{r}")
 
         return res, coingeco_coins, coingeco_names
 
-    def get_exchanges(self, num, exchange="BTC"):
-        exchanges = self.get_all_exchanges()
-        res = []
-        res_dict = {}
-        n, coin_index, page = 0, 0, 2
-        market_list = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=200, page=1,
-                                           sparkline=False)
-        market_list = [market['symbol'].upper() for market in market_list]
-        # market_list = list(set(market_list))
-        while n < num:
-            if coin_index == len(market_list):
-                market_list = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=200, page=page,
-                                                   sparkline=False)
-                if not market_list:
-                    break
-                market_list = [market['symbol'].upper() for market in market_list]
-                page += 1
-                coin_index = 0
-            elif market_list[coin_index] != exchange and f"{market_list[coin_index]}{exchange}" in exchanges:
-                if f"{market_list[coin_index]}{exchange}" not in res_dict:
-                    res_dict[f"{market_list[coin_index]}{exchange}"] = 1
-                    res.append(f"{market_list[coin_index]}{exchange}")
-                    n += 1
-            coin_index += 1
-        self.tg_bot.send_message(f"{datetime.datetime.now()}: Top {num} exchanges with {exchange}:\n {res}")
-        return res
+    # def get_exchanges_100(self, exchange="BTC"):
+    #     exchanges = self.get_all_exchanges()
+    #     res = []
+    #     res_dict = {}
+    #     n, coin_index, page = 0, 0, 2
+    #     market_list = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=100, page=1,
+    #                                        sparkline=False)
+    #     market_list = [market['symbol'].upper() for market in market_list]
+    #     # market_list = list(set(market_list))
+    #     while n < num:
+    #         if coin_index == len(market_list):
+    #             market_list = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=200, page=page,
+    #                                                sparkline=False)
+    #             if not market_list:
+    #                 break
+    #             market_list = [market['symbol'].upper() for market in market_list]
+    #             page += 1
+    #             coin_index = 0
+    #         elif market_list[coin_index] != exchange and f"{market_list[coin_index]}{exchange}" in exchanges:
+    #             if f"{market_list[coin_index]}{exchange}" not in res_dict:
+    #                 res_dict[f"{market_list[coin_index]}{exchange}"] = 1
+    #                 res.append(f"{market_list[coin_index]}{exchange}")
+    #                 n += 1
+    #         coin_index += 1
+    #     self.tg_bot.send_message(f"{datetime.datetime.now()}: Top {num} exchanges with {exchange}:\n {res}")
+    #     return res
 
     def get_all_exchanges(self):
         api_url = f'https://api.binance.com/api/v3/exchangeInfo'
