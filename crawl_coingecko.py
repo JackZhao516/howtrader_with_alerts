@@ -112,19 +112,28 @@ class CoinGecKo:
             volume_increase = np.sum(data[7:, 1]) / np.sum(data[:7, 1])
 
             if volume_increase >= volume_threshold:
-                res.append([volume_increase, id[1]])
+                res.append([volume_increase, id[1], id[0]])
 
         res = sorted(res, key=lambda x: x[0], reverse=True)
-        coins = []
-        with open("coins_with_weekly_volume_increase.txt", "w") as f:
-            for coin in res:
-                f.write(f"{coin[1]}: {coin[0]}\n")
-                coins.append(coin[1])
-        print(res)
+        exchanges = self.get_all_exchanges()
+        coingeco_coins, coingeco_names, ex = [], [], []
+
+        for volume_increase, symbol, coin_id in res:
+            if f"{symbol}USDT" not in exchanges and f"{symbol}BTC" not in exchanges and f"{symbol}ETH" not in exchanges:
+                coingeco_coins.append(coin_id)
+                coingeco_names.append(symbol)
+            else:
+                if f"{symbol}USDT" in exchanges:
+                    ex.append(f"{symbol}USDT")
+                if f"{symbol}BTC" in exchanges:
+                    ex.append(f"{symbol}BTC")
+                if f"{symbol}ETH" in exchanges:
+                    ex.append(f"{symbol}ETH")
+
         l, r = res[:len(res) // 2], res[len(res) // 2:]
         self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 500 coins that has weekly volume increase > 30%:\n {l}")
         self.tg_bot.send_message(f"{r}")
-        return coins
+        return ex, coingeco_coins, coingeco_names
 
 
 if __name__ == '__main__':
