@@ -129,11 +129,15 @@ class CoinGecKo:
                     ex.append(f"{symbol}BTC")
                 if f"{symbol}ETH" in exchanges:
                     ex.append(f"{symbol}ETH")
-
-        l, m1, m2, r = res[:len(res) // 4], res[len(res) // 4: len(res) // 2], res[len(res) // 2: 3 * len(res) // 4], res[3 * len(res) // 4:]
+        res = np.array(res)
+        l, m1, m2, m3, m4, r = res[:len(res) // 6, :2], res[len(res) // 6: len(res) // 3, :2], res[len(res) // 3: len(res) // 2, :2], \
+                               res[len(res) // 2: 2 * len(res) // 3, :2], res[2 * len(res) // 3: 5 * len(res) // 6, :2], \
+                               res[5 * len(res) // 6:, :2]
         self.tg_bot.send_message(f"{datetime.datetime.now()}: Top 500 coins that has weekly volume increase > 30%:\n {l}")
         self.tg_bot.send_message(f"{m1}")
         self.tg_bot.send_message(f"{m2}")
+        self.tg_bot.send_message(f"{m3}")
+        self.tg_bot.send_message(f"{m4}")
         self.tg_bot.send_message(f"{r}")
         return ex, coingeco_coins, coingeco_names
 
