@@ -36,7 +36,7 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     while True:
         setting = {}
         exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
-        coins_threads = alert_coins(coin_ids, coin_symbols, True)
+        # coins_threads = alert_coins(coin_ids, coin_symbols, True)
 
         for exchange in exchanges:
             cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
@@ -49,7 +49,7 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
         # TODO fix sleep
         sleep(60 * 60 * 24 * 3) # 3 days
         cta_engine.close()
-        close_all_threads(coins_threads)
+        # close_all_threads(coins_threads)
         sleep(5)
         main_engine.write_log("re-run alert_100")
 
@@ -91,7 +91,7 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
     while True:
         setting = {}
         exchanges, coin_ids, coin_symbols = cg.get_coins_with_weekly_volume_increase()
-        coins_threads = alert_coins(coin_ids, coin_symbols, False)
+        # coins_threads = alert_coins(coin_ids, coin_symbols, False)
 
         for exchange in exchanges:
             cta_engine.add_strategy("Strategy4h1d", f"500_{exchange}_4h1d", f"{exchange.lower()}.BINANCE", setting)
@@ -103,7 +103,7 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
         main_engine.write_log("start cta strategies")
         sleep(60 * 60 * 24 * 3)  # 7 days
         cta_engine.close()
-        close_all_threads(coins_threads)
+        # close_all_threads(coins_threads)
         sleep(5)
         main_engine.write_log("re-run alert_500")
 
