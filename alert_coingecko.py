@@ -71,6 +71,12 @@ class CoinGecKoAlert(CoinGecKo):
         self.ma_1d = None
         self.spot_over_ma_1d = None
 
+        # for minute updates
+        self.last_update_thread = None
+        self.minute_counter_12h = 1
+        self.minute_counter_4h = 1
+        self.minute_counter_1d = 1
+
     def h12_init(self):
         # try:
         price = self.cg.get_coin_market_chart_by_id(id=self.coin_id, vs_currency='usd', days=90)
@@ -163,7 +169,7 @@ class CoinGecKoAlert(CoinGecKo):
         #     sleep(60)
         #     self.h4_init()
 
-    def minute_update(self, update_ma_12=False, update_ma_4=False):
+    def minute_update_100(self, update_ma_12=False, update_ma_4=False):
         price = self.cg.get_price(ids=self.coin_id, vs_currencies='usd', include_last_updated_at=True,
                                   precision="full")
         price = np.float64(price[self.coin_id]["usd"])
@@ -241,7 +247,7 @@ class CoinGecKoAlert(CoinGecKo):
             self.spot_over_ma_4h_500 = True
         # print(f"{self.symbol} spot: {str(price)} D1: {str(self.ma_1d)} H4 ma100: {str(self.ma_4h_500)}")
 
-    def alert_spot(self, alert_100=True):
+    def alert_spot_init(self, alert_100=True):
         # try:
         if alert_100:
             self.h12_init()
@@ -249,29 +255,28 @@ class CoinGecKoAlert(CoinGecKo):
         else:
             self.d1_init()
             self.h4_500_init()
-        last_update = None
-        minute_counter_12h = 1
-        minute_counter_4h = 1
-        minute_counter_1d = 1
-        while SETTINGS["100"]:
-            if last_update:
-                last_update.join()
-            last_update = threading.Thread(target=self.minute_update,
-                                           args=(minute_counter_12h % 720 == 0,
-                                                 minute_counter_4h % 240 == 0)) if alert_100 \
-                else threading.Thread(target=self.minute_update_500,
-                                           args=(minute_counter_1d % 1440 == 0,
-                                                 minute_counter_4h % 240 == 0))
-            last_update.start()
-            minute_counter_12h %= 720
-            minute_counter_12h += 1
-            minute_counter_4h %= 240
-            minute_counter_4h += 1
-            minute_counter_1d %= 1440
-            minute_counter_1d += 1
-            sleep(60)
-        # except Exception as e:
-        #     pass
+
+
+    def minute_update(self, update_ma_12=False, update_ma_4=False, update_ma_1d=False, update_ma_4_500=False):
+
+        if last_update:
+            last_update.join()
+        last_update = threading.Thread(target=self.minute_update,
+                                       args=(minute_counter_12h % 720 == 0,
+                                             minute_counter_4h % 240 == 0)) if alert_100 \
+            else threading.Thread(target=self.minute_update_500,
+                                       args=(minute_counter_1d % 1440 == 0,
+                                             minute_counter_4h % 240 == 0))
+        last_update.start()
+        minute_counter_12h %= 720
+        minute_counter_12h += 1
+        minute_counter_4h %= 240
+        minute_counter_4h += 1
+        minute_counter_1d %= 1440
+        minute_counter_1d += 1
+        sleep(60)
+        except Exception as e:
+            pass
 
 
 def alert_100_function(coin_id, symbol, prod=True):
@@ -285,15 +290,24 @@ def alert_500_function(coin_id, symbol, prod=True):
 
 
 def alert_coins(coin_ids, coin_symbols, alert_100=True):
-    threads = []
-    for i in range(len(coin_ids)):
-        coin_id, coin_symbol = coin_ids[i], coin_symbols[i]
-        t = threading.Thread(target=alert_100_function if alert_100 else alert_500_function,
-                             args=(coin_id, coin_symbol, SETTINGS["PROD"]))
-        t.start()
-        threads.append(t)
-        sleep(1)
-    return threads
+    # threads = []
+    # for i in range(len(coin_ids)):
+    #     coin_id, coin_symbol = coin_ids[i], coin_symbols[i]
+    #     t = threading.Thread(target=alert_100_function if alert_100 else alert_500_function,
+    #                          args=(coin_id, coin_symbol, SETTINGS["PROD"]))
+    #     t.start()
+    #     threads.append(t)
+    #     sleep(1)
+    # return threads
+    coins = {}
+    for i, coin_id in enumerate(coin_ids):
+        coin_symbol = coin_symbols[i]
+        coins[coin_id] = CoinGecKoAlert(coin_id, coin_symbol, SETTINGS["PROD"])
+
+    # init all coins instances
+    # cg get coin prices
+    # for loop through all instances:
+        # pass in price and coin id
 
 
 def close_all_threads(threads):
