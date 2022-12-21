@@ -26,9 +26,9 @@ usdt_gateway_setting = {
     }
 
 
-last={"ETH":['BNBETH', 'XRPETH', 'SOLETH', 'MATICETH', 'TRXETH', 'UNIETH', 'WBTCETH', 'ATOMETH', 'LTCETH', 'LINKETH', 'ETCETH', 'XLMETH', 'FTTETH', 'XMRETH', 'ALGOETH', 'VETETH', 'APEETH', 'FILETH', 'EGLDETH', 'DASHETH', 'HOTETH', 'ROSEETH', 'GLMETH', 'IOTXETH', 'ONTETH', 'OPETH', 'VGXETH', 'LSKETH', 'PUNDIXETH', 'SNTETH', 'PEOPLEETH', 'GALETH', 'STEEMETH', 'DENTETH', 'RLCETH', 'STRAXETH', 'FUNETH', 'SSVETH', 'QKCETH', 'STMXETH', 'XVGETH', 'BONDETH', 'MFTETH', 'UNFIETH', 'WANETH', 'BELETH', 'BLZETH', 'LITETH', 'KEYETH', 'WINGETH', 'ADXETH', 'UFTETH', 'DEXEETH', 'PROSETH', 'VIBETH', 'BETHETH']
-, "BTC": ['BNBBTC', 'XRPBTC', 'DOGEBTC', 'MATICBTC', 'TRXBTC', 'UNIBTC', 'ATOMBTC', 'LTCBTC', 'LINKBTC', 'XLMBTC', 'XMRBTC', 'ALGOBTC', 'BCHBTC', 'QNTBTC', 'APEBTC', 'EGLDBTC', 'CHZBTC', 'MKRBTC', 'CAKEBTC', 'PAXGBTC', 'NEXOBTC', 'ENSBTC', 'RVNBTC', 'COMPBTC', 'TWTBTC', 'CVXBTC', 'DCRBTC', 'GMXBTC', 'BTGBTC', 'GLMBTC', 'IOTXBTC', 'SUSHIBTC', 'YFIBTC', 'LPTBTC', 'POLYBTC', 'FLUXBTC', 'HIVEBTC', 'INJBTC', 'VGXBTC', 'RENBTC', 'COTIBTC', 'API3BTC', 'SNTBTC', 'SYSBTC', 'PROMBTC', 'PYRBTC', 'STRAXBTC', 'ARDRBTC', 'MBOXBTC', 'STEEMBTC', 'RADBTC', 'CTSIBTC', 'RLCBTC', 'SSVBTC', 'QKCBTC', 'CTKBTC', 'XVSBTC', 'STPTBTC', 'DOCKBTC', 'STMXBTC', 'ANTBTC', 'SANTOSBTC', 'STGBTC', 'FETBTC', 'AERGOBTC', 'DODOBTC', 'DUSKBTC', 'UTKBTC', 'NEBLBTC', 'ALPHABTC', 'AGIXBTC']
-, "USDT": ['BNBUSDT', 'XRPUSDT', 'MATICUSDT', 'ATOMUSDT', 'LINKUSDT', 'XLMUSDT', 'ALGOUSDT', 'LUNCUSDT', 'QNTUSDT', 'CHZUSDT', 'MKRUSDT', 'CAKEUSDT', 'NEXOUSDT', 'ENSUSDT', 'RVNUSDT', 'LUNAUSDT', 'COMPUSDT', 'GMXUSDT', 'RSRUSDT', 'SUSHIUSDT', 'POLYUSDT', 'FLUXUSDT', 'INJUSDT', 'VGXUSDT', 'COTIUSDT', 'REEFUSDT', 'PYRUSDT', 'TRIBEUSDT', 'RLCUSDT', 'SANTOSUSDT', 'STGUSDT', 'ERNUSDT', 'ALPACAUSDT', 'SFPUSDT', 'FORTHUSDT', 'ALPINEUSDT', 'LAZIOUSDT', 'VITEUSDT', 'CITYUSDT', 'BARUSDT', 'LEVERUSDT', 'BEAMUSDT']}
+# last={"ETH":['BNBETH', 'XRPETH', 'SOLETH', 'MATICETH', 'TRXETH', 'UNIETH', 'WBTCETH', 'ATOMETH', 'LTCETH', 'LINKETH', 'ETCETH', 'XLMETH', 'FTTETH', 'XMRETH', 'ALGOETH', 'VETETH', 'APEETH', 'FILETH', 'EGLDETH', 'DASHETH', 'HOTETH', 'ROSEETH', 'GLMETH', 'IOTXETH', 'ONTETH', 'OPETH', 'VGXETH', 'LSKETH', 'PUNDIXETH', 'SNTETH', 'PEOPLEETH', 'GALETH', 'STEEMETH', 'DENTETH', 'RLCETH', 'STRAXETH', 'FUNETH', 'SSVETH', 'QKCETH', 'STMXETH', 'XVGETH', 'BONDETH', 'MFTETH', 'UNFIETH', 'WANETH', 'BELETH', 'BLZETH', 'LITETH', 'KEYETH', 'WINGETH', 'ADXETH', 'UFTETH', 'DEXEETH', 'PROSETH', 'VIBETH', 'BETHETH']
+# , "BTC": ['BNBBTC', 'XRPBTC', 'DOGEBTC', 'MATICBTC', 'TRXBTC', 'UNIBTC', 'ATOMBTC', 'LTCBTC', 'LINKBTC', 'XLMBTC', 'XMRBTC', 'ALGOBTC', 'BCHBTC', 'QNTBTC', 'APEBTC', 'EGLDBTC', 'CHZBTC', 'MKRBTC', 'CAKEBTC', 'PAXGBTC', 'NEXOBTC', 'ENSBTC', 'RVNBTC', 'COMPBTC', 'TWTBTC', 'CVXBTC', 'DCRBTC', 'GMXBTC', 'BTGBTC', 'GLMBTC', 'IOTXBTC', 'SUSHIBTC', 'YFIBTC', 'LPTBTC', 'POLYBTC', 'FLUXBTC', 'HIVEBTC', 'INJBTC', 'VGXBTC', 'RENBTC', 'COTIBTC', 'API3BTC', 'SNTBTC', 'SYSBTC', 'PROMBTC', 'PYRBTC', 'STRAXBTC', 'ARDRBTC', 'MBOXBTC', 'STEEMBTC', 'RADBTC', 'CTSIBTC', 'RLCBTC', 'SSVBTC', 'QKCBTC', 'CTKBTC', 'XVSBTC', 'STPTBTC', 'DOCKBTC', 'STMXBTC', 'ANTBTC', 'SANTOSBTC', 'STGBTC', 'FETBTC', 'AERGOBTC', 'DODOBTC', 'DUSKBTC', 'UTKBTC', 'NEBLBTC', 'ALPHABTC', 'AGIXBTC']
+# , "USDT": ['BNBUSDT', 'XRPUSDT', 'MATICUSDT', 'ATOMUSDT', 'LINKUSDT', 'XLMUSDT', 'ALGOUSDT', 'LUNCUSDT', 'QNTUSDT', 'CHZUSDT', 'MKRUSDT', 'CAKEUSDT', 'NEXOUSDT', 'ENSUSDT', 'RVNUSDT', 'LUNAUSDT', 'COMPUSDT', 'GMXUSDT', 'RSRUSDT', 'SUSHIUSDT', 'POLYUSDT', 'FLUXUSDT', 'INJUSDT', 'VGXUSDT', 'COTIUSDT', 'REEFUSDT', 'PYRUSDT', 'TRIBEUSDT', 'RLCUSDT', 'SANTOSUSDT', 'STGUSDT', 'ERNUSDT', 'ALPACAUSDT', 'SFPUSDT', 'FORTHUSDT', 'ALPINEUSDT', 'LAZIOUSDT', 'VITEUSDT', 'CITYUSDT', 'BARUSDT', 'LEVERUSDT', 'BEAMUSDT']}
 
 
 def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
@@ -36,20 +36,19 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     while True:
         setting = {}
         exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
-        # coins_threads = alert_coins(coin_ids, coin_symbols, True)
+        coins_thread = alert_coins(coin_ids, coin_symbols, True)
 
         for exchange in exchanges:
             cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
 
         cta_engine.init_all_strategies()
         main_engine.write_log(cta_engine.print_strategy())
-        sleep(60 * len(exchanges))  # Leave enough time to complete strategy initialization
+        sleep(80 * len(exchanges))  # Leave enough time to complete strategy initialization
         cta_engine.start_all_strategies()
         main_engine.write_log("start cta strategies")
-        # TODO fix sleep
         sleep(60 * 60 * 24 * 3) # 3 days
         cta_engine.close()
-        # close_all_threads(coins_threads)
+        close_all_threads(coins_thread)
         sleep(5)
         main_engine.write_log("re-run alert_100")
 
@@ -75,7 +74,7 @@ def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
 
         cta_engine.init_all_strategies()
         main_engine.write_log(cta_engine.print_strategy())
-        # sleep(40 * num * 3)  # Leave enough time to complete strategy initialization
+
         sleep(70 * len(exchanges))  # Leave enough time to complete strategy initialization
         cta_engine.start_all_strategies()
         main_engine.write_log("start cta strategies")
@@ -91,19 +90,19 @@ def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
     while True:
         setting = {}
         exchanges, coin_ids, coin_symbols = cg.get_coins_with_weekly_volume_increase()
-        # coins_threads = alert_coins(coin_ids, coin_symbols, False)
+        coins_thread = alert_coins(coin_ids, coin_symbols, False)
 
         for exchange in exchanges:
             cta_engine.add_strategy("Strategy4h1d", f"500_{exchange}_4h1d", f"{exchange.lower()}.BINANCE", setting)
 
         cta_engine.init_all_strategies()
         main_engine.write_log(cta_engine.print_strategy())
-        sleep(60 * len(exchanges))  # Leave enough time to complete strategy initialization
+        sleep(70 * len(exchanges))  # Leave enough time to complete strategy initialization
         cta_engine.start_all_strategies()
         main_engine.write_log("start cta strategies")
         sleep(60 * 60 * 24 * 3)  # 7 days
         cta_engine.close()
-        # close_all_threads(coins_threads)
+        close_all_threads(coins_thread)
         sleep(5)
         main_engine.write_log("re-run alert_500")
 

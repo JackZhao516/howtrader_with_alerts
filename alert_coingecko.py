@@ -1,9 +1,34 @@
+import time
 from time import sleep
 import numpy as np
 import threading
+from collections import defaultdict
 from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
 from howtrader.trader.setting import SETTINGS
+
+############################################################################################################
+# maintain the msg queue
+msg_queue_lock = threading.Lock()
+msg_queue = []
+
+
+def add_msg_to_queue(msg):
+    msg_queue_lock.acquire()
+    msg_queue.append(msg)
+    msg_queue_lock.release()
+
+
+def send_msg_from_queue(tg_bot):
+    while SETTINGS["100"]:
+        if msg_queue:
+            msg_queue_lock.acquire()
+            msg = msg_queue.pop(0)
+            msg_queue_lock.release()
+            tg_bot.safe_send_message(msg)
+        sleep(1.1)
+
+############################################################################################################
 
 
 class CoinGecKo12H(CoinGecKo):
@@ -40,8 +65,9 @@ class CoinGecKo12H(CoinGecKo):
             return False
 
 
+############################################################################################################
 class CoinGecKoAlert(CoinGecKo):
-    def __init__(self, coin_id, symbol, prod=True):
+    def __init__(self, coin_id, symbol, prod=True, alert_100=True):
         super().__init__(prod=prod)
         self.coin_id = coin_id
         self.symbol = symbol
@@ -76,6 +102,9 @@ class CoinGecKoAlert(CoinGecKo):
         self.minute_counter_12h = 1
         self.minute_counter_4h = 1
         self.minute_counter_1d = 1
+
+        # indicate whether for 100 or 500
+        self.alert_100 = alert_100
 
     def h12_init(self):
         # try:
@@ -169,10 +198,10 @@ class CoinGecKoAlert(CoinGecKo):
         #     sleep(60)
         #     self.h4_init()
 
-    def minute_update_100(self, update_ma_12=False, update_ma_4=False):
-        price = self.cg.get_price(ids=self.coin_id, vs_currencies='usd', include_last_updated_at=True,
-                                  precision="full")
-        price = np.float64(price[self.coin_id]["usd"])
+    def minute_update_100(self, price, update_ma_12=False, update_ma_4=False):
+        # price = self.cg.get_price(ids=self.coin_id, vs_currencies='usd', include_last_updated_at=True,
+        #                           precision="full")
+        # price = np.float64(price[self.coin_id]["usd"])
         if update_ma_12:
             self.list_12h = np.roll(self.list_12h, 1)
             self.list_12h[0] = price
@@ -189,30 +218,30 @@ class CoinGecKoAlert(CoinGecKo):
             # print(price, self.list_4h, self.counter_4h, self.ma_4h, np.sum(self.list_4h))
 
         if self.spot_over_ma_12h and price < self.ma_12h:
-            self.tg_bot.safe_send_message(
+            add_msg_to_queue(
                  f"100_{self.symbol} spot: {str(price)} crossunder H12 ma180: {str(self.ma_12h)}")
             self.spot_over_ma_12h = False
         elif not self.spot_over_ma_12h and price > self.ma_12h:
-            self.tg_bot.safe_send_message(
+            add_msg_to_queue(
                  f"100_{self.symbol} spot: {str(price)} crossover H12 ma180: {str(self.ma_12h)}")
             self.spot_over_ma_12h = True
 
         if self.spot_over_ma_4h and price < self.ma_4h:
-            self.tg_bot.safe_send_message(
+            add_msg_to_queue(
                 f"100_{self.symbol} spot: {str(price)} crossunder H4 ma200: {str(self.ma_4h)}")
             self.spot_over_ma_4h = False
         elif not self.spot_over_ma_4h and price > self.ma_4h:
-            self.tg_bot.safe_send_message(
+            add_msg_to_queue(
                 f"100_{self.symbol} spot: {str(price)} crossover H4 ma200: {str(self.ma_4h)}")
             self.spot_over_ma_4h = True
 
-        # print(f"{self.symbol} spot: {str(price)} H12 ma180: {str(self.ma_12h)} H4 ma200: {str(self.ma_4h)}")
-        # print(f"{self.coin_id} spot: {str(price)} H4 ma200: {str(self.ma_4h)}")
+        # self.tg_bot.safe_send_message(f"{self.symbol} spot: {str(price)} H12 ma180: {str(self.ma_12h)} H4 ma200: {str(self.ma_4h)}, _____{time.time()}")
+        # add_msg_to_queue(f"{self.symbol} spot: {str(price)} H4 ma200: {str(self.ma_4h)}, _____{time.time()}")
 
-    def minute_update_500(self, update_ma_1d=False, update_ma_4=False):
-        price = self.cg.get_price(ids=self.coin_id, vs_currencies='usd', include_last_updated_at=True,
-                                  precision="full")
-        price = np.float64(price[self.coin_id]["usd"])
+    def minute_update_500(self, price, update_ma_1d=False, update_ma_4=False):
+        # price = self.cg.get_price(ids=self.coin_id, vs_currencies='usd', include_last_updated_at=True,
+                                  # precision="full")
+        # price = np.float64(price[self.coin_id]["usd"])
         if update_ma_1d:
             self.list_1d = np.roll(self.list_1d, 1)
             self.list_1d[0] = price
@@ -229,102 +258,114 @@ class CoinGecKoAlert(CoinGecKo):
             # print(price, self.list_4h, self.counter_4h, self.ma_4h, np.sum(self.list_4h))
 
         if self.spot_over_ma_1d and price < self.ma_1d:
-            self.tg_bot.safe_send_message(
+            add_msg_to_queue(
                  f"500_{self.symbol} spot: {str(price)} crossunder D1 ma90: {str(self.ma_1d)}")
             self.spot_over_ma_1d = False
         elif not self.spot_over_ma_1d and price > self.ma_1d:
-            self.tg_bot.safe_send_message(
+            add_msg_to_queue(
                  f"500_{self.symbol} spot: {str(price)} crossover D1 ma90: {str(self.ma_1d)}")
             self.spot_over_ma_1d = True
 
         if self.spot_over_ma_4h_500 and price < self.ma_4h_500:
-            self.tg_bot.safe_send_message(
+            add_msg_to_queue(
                 f"500_{self.symbol} spot: {str(price)} crossunder H4 ma100: {str(self.ma_4h_500)}")
             self.spot_over_ma_4h_500 = False
         elif not self.spot_over_ma_4h_500 and price > self.ma_4h_500:
-            self.tg_bot.safe_send_message(
+            add_msg_to_queue(
                 f"500_{self.symbol} spot: {str(price)} crossover H4 ma100: {str(self.ma_4h_500)}")
             self.spot_over_ma_4h_500 = True
         # print(f"{self.symbol} spot: {str(price)} D1: {str(self.ma_1d)} H4 ma100: {str(self.ma_4h_500)}")
 
-    def alert_spot_init(self, alert_100=True):
-        # try:
-        if alert_100:
+    def alert_spot_init(self):
+        if self.alert_100:
             self.h12_init()
             self.h4_init()
         else:
             self.d1_init()
             self.h4_500_init()
 
-
-    def minute_update(self, update_ma_12=False, update_ma_4=False, update_ma_1d=False, update_ma_4_500=False):
-
-        if last_update:
-            last_update.join()
-        last_update = threading.Thread(target=self.minute_update,
-                                       args=(minute_counter_12h % 720 == 0,
-                                             minute_counter_4h % 240 == 0)) if alert_100 \
+    def minute_update(self, price):
+        if self.last_update_thread:
+            self.last_update_thread.join()
+        self.last_update_thread = \
+            threading.Thread(target=self.minute_update_100,
+                             args=(price, self.minute_counter_12h % 720 == 0,
+                                   self.minute_counter_4h % 240 == 0)) \
+            if self.alert_100 \
             else threading.Thread(target=self.minute_update_500,
-                                       args=(minute_counter_1d % 1440 == 0,
-                                             minute_counter_4h % 240 == 0))
-        last_update.start()
-        minute_counter_12h %= 720
-        minute_counter_12h += 1
-        minute_counter_4h %= 240
-        minute_counter_4h += 1
-        minute_counter_1d %= 1440
-        minute_counter_1d += 1
-        sleep(60)
-        except Exception as e:
-            pass
+                                  args=(price, self.minute_counter_1d % 1440 == 0,
+                                        self.minute_counter_4h % 240 == 0))
+        self.last_update_thread.start()
+        self.minute_counter_12h %= 720
+        self.minute_counter_12h += 1
+        self.minute_counter_4h %= 240
+        self.minute_counter_4h += 1
+        self.minute_counter_1d %= 1440
+        self.minute_counter_1d += 1
 
-
-def alert_100_function(coin_id, symbol, prod=True):
-    cg100 = CoinGecKoAlert(coin_id, symbol, prod)
-    cg100.alert_spot(True)
-
-
-def alert_500_function(coin_id, symbol, prod=True):
-    cg500 = CoinGecKoAlert(coin_id, symbol, prod)
-    cg500.alert_spot(False)
+        return self.last_update_thread
 
 
 def alert_coins(coin_ids, coin_symbols, alert_100=True):
-    # threads = []
-    # for i in range(len(coin_ids)):
-    #     coin_id, coin_symbol = coin_ids[i], coin_symbols[i]
-    #     t = threading.Thread(target=alert_100_function if alert_100 else alert_500_function,
-    #                          args=(coin_id, coin_symbol, SETTINGS["PROD"]))
-    #     t.start()
-    #     threads.append(t)
-    #     sleep(1)
-    # return threads
     coins = {}
+
+    # init coins
     for i, coin_id in enumerate(coin_ids):
         coin_symbol = coin_symbols[i]
-        coins[coin_id] = CoinGecKoAlert(coin_id, coin_symbol, SETTINGS["PROD"])
+        coins[coin_id] = CoinGecKoAlert(coin_id, coin_symbol, SETTINGS["PROD"], alert_100)
+        coins[coin_id].alert_spot_init()
 
-    # init all coins instances
-    # cg get coin prices
-    # for loop through all instances:
-        # pass in price and coin id
+    # update coins
+    t = threading.Thread(target=loop_alert_helper, args=(coins, coin_ids))
+    t.start()
+    return t
 
 
-def close_all_threads(threads):
-    count = 0
+def loop_alert_helper(coins, coin_ids):
+    coins_threads = {}
+    cg = coins[coin_ids[0]].cg
+    r = None
+    if len(coin_ids) > 250:
+        coin_ids, r = coin_ids[:250], coin_ids[250:]
+    start_time = time.time()
+
+    # setting up the msg queue
+    msg_thread = threading.Thread(target=send_msg_from_queue, args=(coins[coin_ids[0]].tg_bot,))
+    msg_thread.start()
+
+    # minute update
+    while SETTINGS["100"]:
+        prices = cg.get_coins_markets(vs_currency='usd', ids=coin_ids, per_page=250, page=1)
+        if r:
+            prices += cg.get_coins_markets(vs_currency='usd', ids=r, per_page=250, page=2)
+
+        for p in prices:
+            price = np.float64(p["current_price"])
+            coins_threads[p["id"]] = coins[p["id"]].minute_update(price)
+
+        sleep(60.0 - ((time.time() - start_time) % 60.0))
+
+    for t in coins_threads.values():
+        if t:
+            t.join()
+    msg_thread.join()
+
+
+def close_all_threads(thread):
     SETTINGS["100"] = False
-    for t in threads:
-        t.join()
-        count += 1
+    thread.join()
     SETTINGS["100"] = True
-    return count
+
 
 if __name__ == '__main__':
-    t = threading.Thread(target=alert_100_function, args=("bitcoin", "BTC", True))
-    t.start()
-    sleep(200)
-    SETTINGS["100"] = False
-    t.join()
+
+    from crawl_coingecko import CoinGecKo
+    cg = CoinGecKo(SETTINGS["PROD"])
+    exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
+    t = alert_coins(coin_ids, coin_symbols, True)
+    sleep(140)
+    print("here")
+    close_all_threads(t)
     print("done")
     # from pycoingecko import CoinGeckoAPI
     # cg = CoinGeckoAPI(api_key="CG-wAukVxNxrR322gkZYEgZWtV1")
