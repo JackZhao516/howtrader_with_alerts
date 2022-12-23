@@ -17,4 +17,4 @@ deap
 plotly
 importlib-metadata
 backports.zoneinfo; python_version < '3.9'
-
+binance-connector

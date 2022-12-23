@@ -41,7 +41,8 @@ SETTINGS: Dict[str, Any] = {
     "database.user": "",
     "database.password": "",
     "PROD": True,
-    "100": True
+    "100": True,
+    "ten_time_bar": True,
 }
 
 # Load global setting from json file.

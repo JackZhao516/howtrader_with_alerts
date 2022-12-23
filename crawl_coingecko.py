@@ -58,45 +58,36 @@ class CoinGecKo:
 
         return res, coingeco_coins, coingeco_names
 
-    # def get_exchanges_100(self, exchange="BTC"):
-    #     exchanges = self.get_all_exchanges()
-    #     res = []
-    #     res_dict = {}
-    #     n, coin_index, page = 0, 0, 2
-    #     market_list = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=100, page=1,
-    #                                        sparkline=False)
-    #     market_list = [market['symbol'].upper() for market in market_list]
-    #     # market_list = list(set(market_list))
-    #     while n < num:
-    #         if coin_index == len(market_list):
-    #             market_list = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=200, page=page,
-    #                                                sparkline=False)
-    #             if not market_list:
-    #                 break
-    #             market_list = [market['symbol'].upper() for market in market_list]
-    #             page += 1
-    #             coin_index = 0
-    #         elif market_list[coin_index] != exchange and f"{market_list[coin_index]}{exchange}" in exchanges:
-    #             if f"{market_list[coin_index]}{exchange}" not in res_dict:
-    #                 res_dict[f"{market_list[coin_index]}{exchange}"] = 1
-    #                 res.append(f"{market_list[coin_index]}{exchange}")
-    #                 n += 1
-    #         coin_index += 1
-    #     self.tg_bot.send_message(f"{datetime.datetime.now()}: Top {num} exchanges with {exchange}:\n {res}")
-    #     return res
-
     def get_all_exchanges(self):
         api_url = f'https://api.binance.com/api/v3/exchangeInfo'
         response = requests.get(api_url, timeout=10).json()
         exchanges = {exchange['symbol'] for exchange in response['symbols']}
         return exchanges
 
+    def get_500_usdt_exchanges(self, market_cap=True):
+        exchanges = self.get_all_exchanges()
+        res = []
+        if market_cap:
+            ids = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=250, page=1,
+                                            sparkline=False)
+            ids += self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=250, page=2,
+                                             sparkline=False)
+            ids = [id['symbol'].upper() for id in ids]
+            for i, symbol in enumerate(ids):
+                if f"{symbol}USDT" in exchanges:
+                    res.append(f"{symbol}USDT")
+        else:
+            for i in exchanges:
+                if i[-4:] == "USDT" or i[-4:] == "BUSD" or i[-3:] == "BTC":
+                    res.append(i)
+        return res
+
     def get_all_ids(self):
         ids = self.cg.get_coins_list()
         ids = [[id['id'], id['symbol'].upper()] for id in ids]
         return ids
 
-    def get_coins_with_weekly_volume_increase(self, volume_threshold=1.3):
+    def get_coins_with_weekly_volume_increase(self, volume_threshold=1.3, usdt_only=False):
         ids = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=250, page=1,
                                    sparkline=False)
         ids += self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=250, page=2,
@@ -125,10 +116,11 @@ class CoinGecKo:
             else:
                 if f"{symbol}USDT" in exchanges:
                     ex.append(f"{symbol}USDT")
-                if f"{symbol}BTC" in exchanges:
-                    ex.append(f"{symbol}BTC")
-                if f"{symbol}ETH" in exchanges:
-                    ex.append(f"{symbol}ETH")
+                if not usdt_only:
+                    if f"{symbol}BTC" in exchanges:
+                        ex.append(f"{symbol}BTC")
+                    if f"{symbol}ETH" in exchanges:
+                        ex.append(f"{symbol}ETH")
         res = np.array(res)
         l, m1, m2, m3, m4, r = res[:len(res) // 6, :2], res[len(res) // 6: len(res) // 3, :2], res[len(res) // 3: len(res) // 2, :2], \
                                res[len(res) // 2: 2 * len(res) // 3, :2], res[2 * len(res) // 3: 5 * len(res) // 6, :2], \
@@ -144,4 +136,4 @@ class CoinGecKo:
 
 if __name__ == '__main__':
     coin = CoinGecKo(prod=False)
-    coin.get_coins_with_weekly_volume_increase()
+    print(coin.get_all_exchanges())
