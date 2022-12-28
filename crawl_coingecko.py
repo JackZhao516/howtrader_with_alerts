@@ -1,4 +1,5 @@
 from time import sleep
+import logging
 from telegram_api import TelegramBot
 import requests
 import numpy as np
@@ -59,13 +60,15 @@ class CoinGecKo:
         return res, coingeco_coins, coingeco_names
 
     def get_all_exchanges(self):
-        api_url = f'https://api.binance.com/api/v3/exchangeInfo'
+        api_url = f'https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT'
         response = requests.get(api_url, timeout=10).json()
         exchanges = {exchange['symbol'] for exchange in response['symbols']}
         return exchanges
 
     def get_500_usdt_exchanges(self, market_cap=True):
+        # logger.info("Getting all 500 coins")
         exchanges = self.get_all_exchanges()
+        # logger.info(f"Getting all {len(exchanges)}")
         res = []
         if market_cap:
             ids = self.cg.get_coins_markets(vs_currency='usd', order='market_cap_desc', per_page=250, page=1,
@@ -77,9 +80,11 @@ class CoinGecKo:
                 if f"{symbol}USDT" in exchanges:
                     res.append(f"{symbol}USDT")
         else:
+            # logger.info("Getting all 500 coins")
             for i in exchanges:
                 if i[-4:] == "USDT" or i[-4:] == "BUSD" or i[-3:] == "BTC":
                     res.append(i)
+            logging.info(f"Got {len(res)} coins")
         return res
 
     def get_all_ids(self):

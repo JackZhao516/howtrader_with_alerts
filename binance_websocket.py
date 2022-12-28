@@ -1,4 +1,5 @@
 import time
+import sys
 import logging
 import threading
 from collections import defaultdict
@@ -19,9 +20,9 @@ config_logging(logging, logging.INFO)
 exchange_bar_dict = defaultdict(list)
 dict_lock = threading.Lock()
 
-# for testing
-time_counter = {}
-lock = threading.Lock()
+# # for testing
+# time_counter = {}
+# lock = threading.Lock()
 
 # message queue
 msg_queue_lock = threading.Lock()
@@ -45,7 +46,7 @@ def send_msg_from_queue(tg_bot):
 
 
 ##########################################################################################
-def ten_time_bar_alert():
+def ten_time_bar_alert(indicator):
     """
     alert if second and third bar are both ten times larger than first bar
     for top 500 market cap USDT exchanges on binance
@@ -54,7 +55,7 @@ def ten_time_bar_alert():
     start_time = time.time()
     error_count = 0
     logging.info("start ten_time_bar_alert")
-    add_msg_to_queue("start volume alert")
+    # add_msg_to_queue("start volume alert")
 
     try:
         SETTINGS["ten_time_bar"] = True
@@ -62,12 +63,13 @@ def ten_time_bar_alert():
         msg_thread = threading.Thread(target=send_msg_from_queue, args=(tg_bot,))
         msg_thread.start()
         # exchanges, _, _ = cg.get_coins_with_weekly_volume_increase(usdt_only=True)
+        # logging.info("start ten_time_bar_alert")
         exchanges = cg.get_500_usdt_exchanges(market_cap=False)
         exchanges = [e.lower() for e in exchanges]
         logging.info(f"exchanges: {len(exchanges)}")
 
         # # for testing
-        # exchanges = exchanges[:2]
+        exchanges = exchanges[:400] if indicator == 0 else (exchanges[400:800] if indicator == 1 else exchanges[800:])
         # exchanges.append("xlmdownusdt")
 
         klines_client = Client()
@@ -94,8 +96,9 @@ def alert_ten_time_bar(msg):
     """
     alert if second and third bar are both ten times larger than first bar
     """
+    # logging.info(f"msg: {msg}")
     if "stream" not in msg or "data" not in msg or "k" not in msg["data"] or \
-            msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "1m":
+            msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "5m":
         return
 
     kline = msg["data"]["k"]
@@ -104,16 +107,16 @@ def alert_ten_time_bar(msg):
     close = float(kline["c"])
     logging.info(f"symbol: {symbol}")
 
-    # for testing
-    lock.acquire()
-    if current_time not in time_counter:
-        time_counter[current_time] = 1
-    else:
-        time_counter[current_time] += 1
-
-    for k, v in time_counter.items():
-        logging.info(f"vs: {v}")
-    lock.release()
+    # # for testing
+    # lock.acquire()
+    # if current_time not in time_counter:
+    #     time_counter[current_time] = 1
+    # else:
+    #     time_counter[current_time] += 1
+    #
+    # for k, v in time_counter.items():
+    #     logging.info(f"vs: {v}")
+    # lock.release()
 
     dict_lock.acquire()
     if len(exchange_bar_dict[symbol]) == 2:
@@ -128,9 +131,9 @@ def alert_ten_time_bar(msg):
         exchange_bar_dict[symbol] = [current_time, close]
     else:
         exchange_bar_dict[symbol] = [current_time, close]
-    # logging.info(exchange_bar_dict)
+    logging.info(exchange_bar_dict)
     dict_lock.release()
 
 
 if __name__ == "__main__":
-    ten_time_bar_alert()
+    ten_time_bar_alert(sys.argv[1])
