@@ -55,7 +55,7 @@ def ten_time_bar_alert(indicator):
     start_time = time.time()
     error_count = 0
     logging.info("start ten_time_bar_alert")
-    # add_msg_to_queue("start volume alert")
+    add_msg_to_queue("start volume alert")
 
     try:
         SETTINGS["ten_time_bar"] = True
