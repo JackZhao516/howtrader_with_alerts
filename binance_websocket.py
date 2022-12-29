@@ -104,8 +104,8 @@ def alert_ten_time_bar(msg):
     kline = msg["data"]["k"]
     symbol = kline["s"]
     current_time = int(kline["t"])
-    close = float(kline["c"])
-    # logging.info(f"symbol: {symbol}")
+    vol = float(kline["v"])
+    logging.info(f"symbol: {symbol}")
 
     # # for testing
     # lock.acquire()
@@ -120,18 +120,18 @@ def alert_ten_time_bar(msg):
 
     dict_lock.acquire()
     if len(exchange_bar_dict[symbol]) == 2:
-        if close >= 10 * exchange_bar_dict[symbol][1]:
-            exchange_bar_dict[symbol].append(close)
+        if vol >= 10 * exchange_bar_dict[symbol][1]:
+            exchange_bar_dict[symbol].append(vol)
             exchange_bar_dict[symbol][0] = current_time
         else:
-            exchange_bar_dict[symbol] = [current_time, close]
+            exchange_bar_dict[symbol] = [current_time, vol]
     elif len(exchange_bar_dict[symbol]) == 3:
-        if close >= 10 * exchange_bar_dict[symbol][1]:
-            add_msg_to_queue(f"{symbol} 5min bar ten times alert: price[{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {close}]")
-        exchange_bar_dict[symbol] = [current_time, close]
+        if vol >= 10 * exchange_bar_dict[symbol][1]:
+            add_msg_to_queue(f"{symbol} 5min bar ten times alert: price[{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]")
+        exchange_bar_dict[symbol] = [current_time, vol]
     else:
-        exchange_bar_dict[symbol] = [current_time, close]
-    # logging.info(exchange_bar_dict)
+        exchange_bar_dict[symbol] = [current_time, vol]
+    logging.info(exchange_bar_dict)
     dict_lock.release()
 
 
