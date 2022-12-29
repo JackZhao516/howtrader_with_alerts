@@ -55,7 +55,7 @@ def ten_time_bar_alert(indicator):
     start_time = time.time()
     error_count = 0
     logging.info("start ten_time_bar_alert")
-    add_msg_to_queue("start volume alert")
+    # add_msg_to_queue("start volume alert")
 
     try:
         SETTINGS["ten_time_bar"] = True
@@ -105,7 +105,7 @@ def alert_ten_time_bar(msg):
     symbol = kline["s"]
     current_time = int(kline["t"])
     close = float(kline["c"])
-    logging.info(f"symbol: {symbol}")
+    # logging.info(f"symbol: {symbol}")
 
     # # for testing
     # lock.acquire()
@@ -131,7 +131,7 @@ def alert_ten_time_bar(msg):
         exchange_bar_dict[symbol] = [current_time, close]
     else:
         exchange_bar_dict[symbol] = [current_time, close]
-    logging.info(exchange_bar_dict)
+    # logging.info(exchange_bar_dict)
     dict_lock.release()
 
 

@@ -1,3 +1,5 @@
+#!/bin/bash
+conda activate mytrader
 rm -rf alert_5min_0.log
 rm -rf alert_5min_1.log
 rm -rf alert_5min_2.log
