@@ -60,7 +60,7 @@ class CoinGecKo:
         return res, coingeco_coins, coingeco_names
 
     def get_all_exchanges(self):
-        api_url = f'https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT'
+        api_url = f'https://api.binance.com/api/v3/exchangeInfo'
         response = requests.get(api_url, timeout=10).json()
         exchanges = {exchange['symbol'] for exchange in response['symbols']}
         return exchanges

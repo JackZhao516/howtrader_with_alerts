@@ -106,7 +106,8 @@ def alert_ten_time_bar(msg):
     current_time = int(kline["t"])
     vol = float(kline["v"])
     logging.info(f"symbol: {symbol}")
-
+    close = float(kline["c"])
+    amount = vol * close
     # # for testing
     # lock.acquire()
     # if current_time not in time_counter:
@@ -120,14 +121,14 @@ def alert_ten_time_bar(msg):
 
     dict_lock.acquire()
     if len(exchange_bar_dict[symbol]) == 2:
-        if vol >= 10 * exchange_bar_dict[symbol][1]:
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount > 1000.0 or symbol[-3:] == "BTC" and amount > 0.1):
             exchange_bar_dict[symbol].append(vol)
             exchange_bar_dict[symbol][0] = current_time
         else:
             exchange_bar_dict[symbol] = [current_time, vol]
     elif len(exchange_bar_dict[symbol]) == 3:
-        if vol >= 10 * exchange_bar_dict[symbol][1]:
-            add_msg_to_queue(f"{symbol} 5min bar ten times alert: price[{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]")
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount > 1000.0 or symbol[-3:] == "BTC" and amount > 0.1):
+            add_msg_to_queue(f"{symbol} 5min bar ten times alert: volume [{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]")
         exchange_bar_dict[symbol] = [current_time, vol]
     else:
         exchange_bar_dict[symbol] = [current_time, vol]
