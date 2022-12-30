@@ -996,7 +996,7 @@ class BinanceUsdtRestApi(RestClient):
     def query_history(self, req: HistoryRequest) -> List[BarData]:
         """query historical kline data"""
         history: List[BarData] = []
-        limit: int = 1500
+        limit: int = 1000
 
         start_time: int = int(datetime.timestamp(req.start))
 
