@@ -6,7 +6,7 @@ while true;
 do
     DATE=`date | cut -d' ' -f4`
 
-    if [[ $DATE == "01:12:00" ]]
+    if [[ $DATE == "02:35:00" ]]
     then
         conda activate mytrader
         rm -rf alert_5min_0.log
