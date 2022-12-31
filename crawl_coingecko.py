@@ -92,6 +92,7 @@ class CoinGecKo:
             for i in exchanges:
                 if i[-3:] == "BTC" and i[:-3] not in coins:
                     res.append(i)
+            res = list(set(res))
             logging.info(f"Got {len(res)} coins")
         return res
 
