@@ -40,8 +40,8 @@ def send_msg_from_queue(tg_bot):
         if msg_queue:
             msg_queue_lock.acquire()
             msg = msg_queue.pop(0)
-            msg_queue_lock.release()
             tg_bot.safe_send_message(msg)
+            msg_queue_lock.release()
         time.sleep(1.1)
 
 
