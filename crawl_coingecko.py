@@ -80,9 +80,17 @@ class CoinGecKo:
                 if f"{symbol}USDT" in exchanges:
                     res.append(f"{symbol}USDT")
         else:
-            # logger.info("Getting all 500 coins")
+            coins = set()
             for i in exchanges:
-                if i[-4:] == "USDT" or i[-4:] == "BUSD" or i[-3:] == "BTC":
+                if i[-4:] == "USDT":
+                    res.append(i)
+                    coins.add(i[:-4])
+            for i in exchanges:
+                if i[-4:] == "BUSD" and i[:-4] not in coins:
+                    res.append(i)
+                    coins.add(i[:-4])
+            for i in exchanges:
+                if i[-3:] == "BTC" and i[:-3] not in coins:
                     res.append(i)
             logging.info(f"Got {len(res)} coins")
         return res

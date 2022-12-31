@@ -62,15 +62,12 @@ def ten_time_bar_alert(indicator):
         # setting up the msg queue
         msg_thread = threading.Thread(target=send_msg_from_queue, args=(tg_bot,))
         msg_thread.start()
-        # exchanges, _, _ = cg.get_coins_with_weekly_volume_increase(usdt_only=True)
-        # logging.info("start ten_time_bar_alert")
+
         exchanges = cg.get_500_usdt_exchanges(market_cap=False)
         exchanges = [e.lower() for e in exchanges]
         logging.info(f"exchanges: {len(exchanges)}")
 
-        # # for testing
-        exchanges = exchanges[:400] if indicator == 0 else (exchanges[400:800] if indicator == 1 else exchanges[800:])
-        # exchanges.append("xlmdownusdt")
+        exchanges = exchanges[:250] if indicator == 0 else exchanges[250:]
 
         klines_client = Client()
         klines_client.start()
@@ -121,13 +118,13 @@ def alert_ten_time_bar(msg):
 
     dict_lock.acquire()
     if len(exchange_bar_dict[symbol]) == 2:
-        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount > 1000.0 or symbol[-3:] == "BTC" and amount > 0.1):
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount > 10000.0 or symbol[-3:] == "BTC" and amount > 0.1):
             exchange_bar_dict[symbol].append(vol)
             exchange_bar_dict[symbol][0] = current_time
         else:
             exchange_bar_dict[symbol] = [current_time, vol]
     elif len(exchange_bar_dict[symbol]) == 3:
-        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount > 1000.0 or symbol[-3:] == "BTC" and amount > 0.1):
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount > 10000.0 or symbol[-3:] == "BTC" and amount > 0.1):
             add_msg_to_queue(f"{symbol} 5min bar ten times alert: volume [{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]")
         exchange_bar_dict[symbol] = [current_time, vol]
     else:
