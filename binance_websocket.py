@@ -65,9 +65,9 @@ def ten_time_bar_alert(indicator):
 
         exchanges = cg.get_500_usdt_exchanges(market_cap=False)
         exchanges = [e.lower() for e in exchanges]
-        logging.info(f"exchanges: {len(exchanges)}")
 
-        exchanges = exchanges[:250] if indicator == 0 else exchanges[250:]
+        exchanges = exchanges[:250] if indicator == "0" else exchanges[250:]
+        logging.info(f"exchanges: {len(exchanges)}")
 
         klines_client = Client()
         klines_client.start()
