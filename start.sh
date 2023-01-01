@@ -1,14 +1,12 @@
 #!/bin/bash
 
-#!/bin/bash
-
 while true;
 do
     DATE=`date | cut -d' ' -f4`
 
-    if [[ $DATE == "04:00:00" ]]
+    if [[ $DATE == "04:05:00" ]]
     then
-        conda activate mytrader
+#        conda activate mytrader
         rm -rf alert_5min_0.log
         rm -rf alert_5min_1.log
 #        rm -rf alert_5min_2.log
