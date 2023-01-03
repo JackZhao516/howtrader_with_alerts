@@ -131,7 +131,7 @@ def alert_ten_time_bar(msg):
     """
     alert if second and third bar are both ten times larger than first bar
     """
-    logging.info(f"msg: {msg}")
+    # logging.info(f"msg: {msg}")
     if "stream" not in msg or "data" not in msg or "k" not in msg["data"] or \
             msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "15m":
         return
