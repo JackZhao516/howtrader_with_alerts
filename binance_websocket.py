@@ -9,6 +9,7 @@ from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
 from howtrader.trader.setting import SETTINGS
 
+# services
 tg_bot = TelegramBot(SETTINGS["PROD"], alert=False)
 tg_bot.telegram_chat_id = "-859234465"
 cg = CoinGecKo(SETTINGS["PROD"])
@@ -20,14 +21,21 @@ config_logging(logging, logging.INFO)
 exchange_bar_dict = defaultdict(list)
 dict_lock = threading.Lock()
 
-# # for testing
-# time_counter = {}
-# lock = threading.Lock()
+# dict for 15min price alert: symbol->[price_change_rate, last_price]
+price_dict = defaultdict(list)
+price_lock = threading.Lock()
+
+# coin exchanges
+exchanges = cg.get_500_usdt_exchanges(market_cap=False)
+exchanges = [e.lower() for e in exchanges]
+exchanges.sort()
 
 # message queue
 msg_queue_lock = threading.Lock()
 msg_queue = []
 
+# exchange count
+exchange_count = 0
 
 def add_msg_to_queue(msg):
     msg_queue_lock.acquire()
@@ -42,11 +50,34 @@ def send_msg_from_queue(tg_bot):
             msg = msg_queue.pop(0)
             tg_bot.safe_send_message(msg)
             msg_queue_lock.release()
-        time.sleep(1.1)
+        time.sleep(0.11)
+
+
+def monitor_price_change():
+    global exchange_count
+    last_count = exchange_count
+    while SETTINGS["ten_time_bar"]:
+        if exchange_count == 131:
+            price_lock.acquire()
+            exchange_count = 0
+            price_lists = [[k, v[0]] for k, v in price_dict.items()]
+            price_lists.sort(key=lambda x: x[1], reverse=True)
+            largest = []
+            logging.info(f"price_lists: {price_lists}")
+            for k, v in price_lists:
+                if v >= 0.5 and len(largest) < 5:
+                    largest.append([k, v])
+                if len(largest) == 5:
+                    break
+            logging.info(f"largest price change: {largest}")
+            logging.info(f"exchange_count: {exchange_count}")
+            time.sleep(1)
+            price_lock.release()
+        last_count = exchange_count
 
 
 ##########################################################################################
-def ten_time_bar_alert(indicator):
+def klines_alert(indicator):
     """
     alert if second and third bar are both ten times larger than first bar
     for top 500 market cap USDT exchanges on binance
@@ -63,23 +94,30 @@ def ten_time_bar_alert(indicator):
         msg_thread = threading.Thread(target=send_msg_from_queue, args=(tg_bot,))
         msg_thread.start()
 
-        exchanges = cg.get_500_usdt_exchanges(market_cap=False)
-        exchanges = [e.lower() for e in exchanges]
+        monitor_thread = threading.Thread(target=monitor_price_change)
+        monitor_thread.start()
 
+        global exchanges
         # exchanges = exchanges[:250] if indicator == "0" else exchanges[250:]
+        # exchanges = exchanges[:180]
         logging.info(f"exchanges: {len(exchanges)}")
 
         klines_client = Client()
         klines_client.start()
         klines_client.kline(
-            symbol=exchanges, id=id_count, interval="5m", callback=alert_ten_time_bar
+            symbol=exchanges, id=id_count, interval="15m", callback=alert_ten_time_bar
         )
+        id_count += 1
+        # klines_client.kline(
+        #     symbol=exchanges, id=id_count, interval="1m", callback=alert_price
+        # )
 
         time.sleep(86400.0 - ((time.time() - start_time) % 86400.0))
         logging.info("closing ws connection")
         klines_client.stop()
         SETTINGS["ten_time_bar"] = False
         msg_thread.join()
+        monitor_thread.join()
         SETTINGS["ten_time_bar"] = True
 
     except Exception as e:
@@ -93,9 +131,12 @@ def alert_ten_time_bar(msg):
     """
     alert if second and third bar are both ten times larger than first bar
     """
-    # logging.info(f"msg: {msg}")
+    logging.info(f"msg: {msg}")
     if "stream" not in msg or "data" not in msg or "k" not in msg["data"] or \
-            msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "5m":
+            msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "15m":
+        return
+
+    if msg["data"]["k"]["s"].lower() not in exchanges:
         return
 
     kline = msg["data"]["k"]
@@ -105,33 +146,54 @@ def alert_ten_time_bar(msg):
     logging.info(f"symbol: {symbol}")
     close = float(kline["c"])
     amount = vol * close
-    # # for testing
-    # lock.acquire()
-    # if current_time not in time_counter:
-    #     time_counter[current_time] = 1
-    # else:
-    #     time_counter[current_time] += 1
-    #
-    # for k, v in time_counter.items():
-    #     logging.info(f"vs: {v}")
-    # lock.release()
 
     dict_lock.acquire()
+
     if len(exchange_bar_dict[symbol]) == 2:
-        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount > 10000.0 or symbol[-3:] == "BTC" and amount > 0.1):
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= 10000.0 or symbol[-3:] == "BTC" and amount >= 0.1):
             exchange_bar_dict[symbol].append(vol)
             exchange_bar_dict[symbol][0] = current_time
         else:
             exchange_bar_dict[symbol] = [current_time, vol]
     elif len(exchange_bar_dict[symbol]) == 3:
-        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount > 10000.0 or symbol[-3:] == "BTC" and amount > 0.1):
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= 10000.0 or symbol[-3:] == "BTC" and amount >= 0.1):
             add_msg_to_queue(f"{symbol} 5min bar ten times alert{sys.argv[1]}: volume [{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]")
         exchange_bar_dict[symbol] = [current_time, vol]
     else:
         exchange_bar_dict[symbol] = [current_time, vol]
-    logging.info(exchange_bar_dict)
+    # logging.info(exchange_bar_dict)
     dict_lock.release()
 
 
+def alert_price(msg):
+    """
+        mark closr price change rate for 15min bar
+    """
+    # logging.info(f"msg: {msg}")
+    # TODO for testing set to 1min
+    global exchange_count
+    if "stream" not in msg or "data" not in msg or "k" not in msg["data"] or \
+            msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "1m":
+        return
+    # logging.info(f"msg: {msg}")
+    if msg["data"]["k"]["s"].lower() not in exchanges:
+        return
+
+    close = float(msg["data"]["k"]["c"])
+    symbol = msg["data"]["k"]["s"]
+    logging.info(f"symbol: {symbol}")
+    price_lock.acquire()
+    exchange_count += 1
+    logging.info(f"exchange_count: {exchange_count}")
+
+    if symbol not in price_dict:
+        price_dict[symbol] = [0.0, close]
+    else:
+        price_dict[symbol][0] = (close / price_dict[symbol][1] - 1) * 100
+        price_dict[symbol][1] = close
+    logging.info(f"price_dict: {price_dict}")
+    price_lock.release()
+
+
 if __name__ == "__main__":
-    ten_time_bar_alert(sys.argv[1])
+    klines_alert(sys.argv[1])
