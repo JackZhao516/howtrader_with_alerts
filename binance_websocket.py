@@ -37,6 +37,9 @@ msg_queue = []
 # exchange count
 exchange_count = 0
 
+# BTC_price
+BTC_price = 17000
+
 def add_msg_to_queue(msg):
     msg_queue_lock.acquire()
     msg_queue.append(msg)
@@ -148,15 +151,20 @@ def alert_ten_time_bar(msg):
     amount = vol * close
 
     dict_lock.acquire()
+    # update BTC_price
+    global BTC_price
+    if symbol == "BTCUSDT":
+        BTC_price = close
+        logging.info(f"BTC_price: {BTC_price}")
 
     if len(exchange_bar_dict[symbol]) == 2:
-        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= 10000.0 or symbol[-3:] == "BTC" and amount >= 0.1):
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= 50000.0 or symbol[-3:] == "BTC" and amount >= (50000.0 / BTC_price)):
             exchange_bar_dict[symbol].append(vol)
             exchange_bar_dict[symbol][0] = current_time
         else:
             exchange_bar_dict[symbol] = [current_time, vol]
     elif len(exchange_bar_dict[symbol]) == 3:
-        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= 10000.0 or symbol[-3:] == "BTC" and amount >= 0.1):
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= 50000.0 or symbol[-3:] == "BTC" and amount >= (50000.0 / BTC_price)):
             add_msg_to_queue(f"{symbol} 15min bar ten times alert{sys.argv[1]}: volume [{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]")
         exchange_bar_dict[symbol] = [current_time, vol]
     else:
