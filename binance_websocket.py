@@ -17,8 +17,10 @@ MAX_ERROR = 20
 
 config_logging(logging, logging.INFO)
 
-# dict for symbol->[timestamp, close1, close2]
+# symbol->[timestamp, close1, close2]
+# symbol->[timestamp, close]
 exchange_bar_dict = defaultdict(list)
+exchange_bar_dict_0 = defaultdict(list)
 dict_lock = threading.Lock()
 
 # dict for 15min price alert: symbol->[price_change_rate, last_price]
@@ -58,29 +60,45 @@ def send_msg_from_queue(tg_bot):
 
 def monitor_price_change():
     global exchange_count
-    last_count = exchange_count
+    rate_threshold = 5.0
     while SETTINGS["ten_time_bar"]:
-        if exchange_count == 131:
-            price_lock.acquire()
+        if exchange_count == 342:
+            dict_lock.acquire()
             exchange_count = 0
             price_lists = [[k, v[0]] for k, v in price_dict.items()]
+            largest, smallest = [], []
+
+            # get the largest five
             price_lists.sort(key=lambda x: x[1], reverse=True)
-            largest = []
             logging.info(f"price_lists: {price_lists}")
             for k, v in price_lists:
-                if v >= 0.5 and len(largest) < 5:
+                if v >= rate_threshold and len(largest) < 5:
                     largest.append([k, v])
                 if len(largest) == 5:
                     break
+
+            # get the smallest five
+            price_lists.sort(key=lambda x: x[1], reverse=False)
+            logging.info(f"price_lists: {price_lists}")
+            for k, v in price_lists:
+                if v <= -1 * rate_threshold and len(smallest) < 5:
+                    smallest.append([k, v])
+                if len(smallest) == 5:
+                    break
+
             logging.info(f"largest price change: {largest}")
+            logging.info(f"smallest price change: {smallest}")
+            if len(largest) > 0:
+                add_msg_to_queue(f"15 min top 5 positive price change in %: {largest}")
+            if len(smallest) > 0:
+                add_msg_to_queue(f"15 min top 5 negative price change in %: {smallest}")
             logging.info(f"exchange_count: {exchange_count}")
             time.sleep(1)
-            price_lock.release()
-        last_count = exchange_count
+            dict_lock.release()
 
 
 ##########################################################################################
-def klines_alert(indicator):
+def klines_alert():
     """
     alert if second and third bar are both ten times larger than first bar
     for top 500 market cap USDT exchanges on binance
@@ -112,7 +130,7 @@ def klines_alert(indicator):
         )
         id_count += 1
         # klines_client.kline(
-        #     symbol=exchanges, id=id_count, interval="1m", callback=alert_price
+        #     symbol=exchanges, id=id_count, interval="15m", callback=alert_price
         # )
 
         time.sleep(86400.0 - ((time.time() - start_time) % 86400.0))
@@ -132,9 +150,11 @@ def klines_alert(indicator):
 
 def alert_ten_time_bar(msg):
     """
-    alert if second and third bar are both ten times larger than first bar
+    alert if second and third bar are both 10X first bar
+    alert if second bar is 50X first bar
     """
     # logging.info(f"msg: {msg}")
+    alert_threshold = 100000.0
     if "stream" not in msg or "data" not in msg or "k" not in msg["data"] or \
             msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "15m":
         return
@@ -146,7 +166,7 @@ def alert_ten_time_bar(msg):
     symbol = kline["s"]
     current_time = int(kline["t"])
     vol = float(kline["v"])
-    logging.info(f"symbol: {symbol}")
+    # logging.info(f"symbol: {symbol}")
     close = float(kline["c"])
     amount = vol * close
 
@@ -157,51 +177,76 @@ def alert_ten_time_bar(msg):
         BTC_price = close
         logging.info(f"BTC_price: {BTC_price}")
 
+    # two bars alert
+    if len(exchange_bar_dict_0[symbol]) == 2 and vol >= 50 * exchange_bar_dict[symbol][1]:
+        add_msg_to_queue(f"{symbol} 15min bar ten times alert 2 bars: volume [{exchange_bar_dict[symbol][1]} -> {vol}]")
+        exchange_bar_dict_0[symbol] = [current_time, vol]
+    elif ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or \
+            (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price)):
+        exchange_bar_dict_0[symbol] = [current_time, vol]
+    # logging.info(f"exchange_bar_dict_0: {exchange_bar_dict_0}")
+
+    # three bars alert
     if len(exchange_bar_dict[symbol]) == 2:
-        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= 50000.0 or symbol[-3:] == "BTC" and amount >= (50000.0 / BTC_price)):
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and\
+                (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
+                 (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price))):
             exchange_bar_dict[symbol].append(vol)
             exchange_bar_dict[symbol][0] = current_time
         else:
             exchange_bar_dict[symbol] = [current_time, vol]
     elif len(exchange_bar_dict[symbol]) == 3:
-        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= 50000.0 or symbol[-3:] == "BTC" and amount >= (50000.0 / BTC_price)):
-            add_msg_to_queue(f"{symbol} 15min bar ten times alert{sys.argv[1]}: volume [{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]")
+        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and \
+                (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
+                 (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price))):
+            add_msg_to_queue(f"{symbol} 15min bar ten times alert 3 bars: volume [{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]")
         exchange_bar_dict[symbol] = [current_time, vol]
     else:
         exchange_bar_dict[symbol] = [current_time, vol]
     # logging.info(exchange_bar_dict)
-    dict_lock.release()
 
-
-def alert_price(msg):
-    """
-        mark closr price change rate for 15min bar
-    """
-    # logging.info(f"msg: {msg}")
-    # TODO for testing set to 1min
+    # price alert
     global exchange_count
-    if "stream" not in msg or "data" not in msg or "k" not in msg["data"] or \
-            msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "1m":
-        return
-    # logging.info(f"msg: {msg}")
-    if msg["data"]["k"]["s"].lower() not in exchanges:
-        return
-
-    close = float(msg["data"]["k"]["c"])
-    symbol = msg["data"]["k"]["s"]
-    logging.info(f"symbol: {symbol}")
-    price_lock.acquire()
     exchange_count += 1
-    logging.info(f"exchange_count: {exchange_count}")
+    # logging.info(f"exchange_count: {exchange_count}")
 
     if symbol not in price_dict:
         price_dict[symbol] = [0.0, close]
     else:
         price_dict[symbol][0] = (close / price_dict[symbol][1] - 1) * 100
         price_dict[symbol][1] = close
-    logging.info(f"price_dict: {price_dict}")
-    price_lock.release()
+    dict_lock.release()
+
+
+# def alert_price(msg):
+#     """
+#         mark close price change rate for 15min bar
+#     """
+#     # logging.info(f"msg: {msg}")
+#     # TODO for testing set to 1min
+#     global exchange_count
+#     if "stream" not in msg or "data" not in msg or "k" not in msg["data"] or \
+#             msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "15m":
+#         return
+#     # logging.info(f"msg: {msg}")
+#     if msg["data"]["k"]["s"].lower() not in exchanges:
+#         return
+#
+#     close = float(msg["data"]["k"]["c"])
+#     symbol = msg["data"]["k"]["s"]
+#     logging.info(f"symbol: {symbol}")
+#     price_lock.acquire()
+#     exchange_count += 1
+#     logging.info(f"exchange_count: {exchange_count}")
+#
+#     if symbol not in price_dict:
+#         price_dict[symbol] = [0.0, close]
+#     else:
+#         price_dict[symbol][0] = (close / price_dict[symbol][1] - 1) * 100
+#         price_dict[symbol][1] = close
+#     # logging.info(f"price_dict: {price_dict}")
+#     price_lock.release()
 
 
 if __name__ == "__main__":
-    klines_alert(sys.argv[1])
+    klines_alert()
