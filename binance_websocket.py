@@ -10,8 +10,12 @@ from telegram_api import TelegramBot
 from howtrader.trader.setting import SETTINGS
 
 # services
+TG_VOLUME_ALERT = "-859234465"
+TG_PRICE_ALERT = "-824512265"
 tg_bot = TelegramBot(SETTINGS["PROD"], alert=False)
-tg_bot.telegram_chat_id = "-859234465"
+tg_bot.telegram_chat_id = TG_VOLUME_ALERT
+tg_bot_price = TelegramBot(SETTINGS["PROD"], alert=False)
+tg_bot_price.telegram_chat_id = TG_PRICE_ALERT
 cg = CoinGecKo(SETTINGS["PROD"])
 MAX_ERROR = 20
 
@@ -73,6 +77,7 @@ def monitor_price_change():
             logging.info(f"price_lists: {price_lists}")
             for k, v in price_lists:
                 if v >= rate_threshold and len(largest) < 5:
+                    v = round(v, 2)
                     largest.append([k, v])
                 if len(largest) == 5:
                     break
@@ -82,6 +87,7 @@ def monitor_price_change():
             logging.info(f"price_lists: {price_lists}")
             for k, v in price_lists:
                 if v <= -1 * rate_threshold and len(smallest) < 5:
+                    v = round(v, 2)
                     smallest.append([k, v])
                 if len(smallest) == 5:
                     break
@@ -89,9 +95,9 @@ def monitor_price_change():
             logging.info(f"largest price change: {largest}")
             logging.info(f"smallest price change: {smallest}")
             if len(largest) > 0:
-                add_msg_to_queue(f"15 min top 5 positive price change in %: {largest}")
+                tg_bot_price.safe_send_message(f"15 min top 5 positive price change in %: {largest}")
             if len(smallest) > 0:
-                add_msg_to_queue(f"15 min top 5 negative price change in %: {smallest}")
+                tg_bot_price.safe_send_message(f"15 min top 5 negative price change in %: {smallest}")
             logging.info(f"exchange_count: {exchange_count}")
             time.sleep(1)
             dict_lock.release()
@@ -133,7 +139,7 @@ def klines_alert():
         #     symbol=exchanges, id=id_count, interval="15m", callback=alert_price
         # )
 
-        time.sleep(86400.0 - ((time.time() - start_time) % 86400.0))
+        time.sleep(88200.0 - ((time.time() - start_time) % 86400.0))
         logging.info("closing ws connection")
         klines_client.stop()
         SETTINGS["ten_time_bar"] = False
@@ -178,11 +184,12 @@ def alert_ten_time_bar(msg):
         logging.info(f"BTC_price: {BTC_price}")
 
     # two bars alert
-    if len(exchange_bar_dict_0[symbol]) == 2 and vol >= 50 * exchange_bar_dict[symbol][1]:
-        add_msg_to_queue(f"{symbol} 15min bar ten times alert 2 bars: volume [{exchange_bar_dict[symbol][1]} -> {vol}]")
+    if len(exchange_bar_dict_0[symbol]) == 2 and vol >= 50 * exchange_bar_dict[symbol][1] and \
+            (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
+             (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price))):
+        add_msg_to_queue(f"{symbol} 15min bar ten times alert 2 bars: volume [{exchange_bar_dict[symbol][1]} -> {vol}]\namount: ${amount}")
         exchange_bar_dict_0[symbol] = [current_time, vol]
-    elif ((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or \
-            (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price)):
+    else:
         exchange_bar_dict_0[symbol] = [current_time, vol]
     # logging.info(f"exchange_bar_dict_0: {exchange_bar_dict_0}")
 
@@ -199,7 +206,7 @@ def alert_ten_time_bar(msg):
         if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and \
                 (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
                  (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price))):
-            add_msg_to_queue(f"{symbol} 15min bar ten times alert 3 bars: volume [{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]")
+            add_msg_to_queue(f"{symbol} 15min bar ten times alert 3 bars: volume [{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]\namount: ${amount}")
         exchange_bar_dict[symbol] = [current_time, vol]
     else:
         exchange_bar_dict[symbol] = [current_time, vol]
