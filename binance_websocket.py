@@ -1,5 +1,5 @@
 import time
-import sys
+import math
 import logging
 import threading
 from collections import defaultdict
@@ -160,7 +160,7 @@ def alert_ten_time_bar(msg):
     alert if second bar is 50X first bar
     """
     # logging.info(f"msg: {msg}")
-    alert_threshold = 100000.0
+    alert_threshold = 500000.0
     if "stream" not in msg or "data" not in msg or "k" not in msg["data"] or \
             msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "15m":
         return
@@ -187,7 +187,8 @@ def alert_ten_time_bar(msg):
     if len(exchange_bar_dict_0[symbol]) == 2 and vol >= 50 * exchange_bar_dict[symbol][1] and \
             (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
              (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price))):
-        add_msg_to_queue(f"{symbol} 15min bar ten times alert 2 bars: volume [{exchange_bar_dict[symbol][1]} -> {vol}]\namount: ${amount}")
+        add_msg_to_queue(f"{symbol} 15min bar ten times alert 2 bars: volume [{exchange_bar_dict[symbol][1]} "
+                         f"-> {vol}]\namount: ${math.ceil(amount)}")
         exchange_bar_dict_0[symbol] = [current_time, vol]
     else:
         exchange_bar_dict_0[symbol] = [current_time, vol]
@@ -206,7 +207,8 @@ def alert_ten_time_bar(msg):
         if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and \
                 (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
                  (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price))):
-            add_msg_to_queue(f"{symbol} 15min bar ten times alert 3 bars: volume [{exchange_bar_dict[symbol][1]} -> {exchange_bar_dict[symbol][2]} -> {vol}]\namount: ${amount}")
+            add_msg_to_queue(f"{symbol} 15min bar ten times alert 3 bars: volume [{exchange_bar_dict[symbol][1]} "
+                             f"-> {exchange_bar_dict[symbol][2]} -> {vol}]\namount: ${math.ceil(amount)}")
         exchange_bar_dict[symbol] = [current_time, vol]
     else:
         exchange_bar_dict[symbol] = [current_time, vol]
