@@ -94,6 +94,8 @@ def monitor_price_change():
 
             logging.info(f"largest price change: {largest}")
             logging.info(f"smallest price change: {smallest}")
+            logging.info(f"exchange bar dict: {exchange_bar_dict}")
+            logging.info(f"exchange bar dict 0: {exchange_bar_dict_0}")
             if len(largest) > 0:
                 tg_bot_price.safe_send_message(f"15 min top 5 positive price change in %: {largest}")
             if len(smallest) > 0:
@@ -187,7 +189,7 @@ def alert_ten_time_bar(msg):
     if len(exchange_bar_dict_0[symbol]) == 2 and vol >= 50 * exchange_bar_dict[symbol][1] and \
             (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
              (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price))):
-        add_msg_to_queue(f"{symbol} 15min bar ten times alert 2 bars: volume [{exchange_bar_dict[symbol][1]} "
+        add_msg_to_queue(f"{symbol} 15 min volume alert 2 bars: volume [{exchange_bar_dict[symbol][1]} "
                          f"-> {vol}]\namount: ${math.ceil(amount)}")
         exchange_bar_dict_0[symbol] = [current_time, vol]
     else:
@@ -207,7 +209,7 @@ def alert_ten_time_bar(msg):
         if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and \
                 (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
                  (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price))):
-            add_msg_to_queue(f"{symbol} 15min bar ten times alert 3 bars: volume [{exchange_bar_dict[symbol][1]} "
+            add_msg_to_queue(f"{symbol} 15 min volume alert 3 bars: volume [{exchange_bar_dict[symbol][1]} "
                              f"-> {exchange_bar_dict[symbol][2]} -> {vol}]\namount: ${math.ceil(amount)}")
         exchange_bar_dict[symbol] = [current_time, vol]
     else:
