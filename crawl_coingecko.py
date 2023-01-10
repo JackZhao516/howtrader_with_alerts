@@ -10,9 +10,9 @@ import datetime
 class CoinGecKo:
     COINGECKO_API_KEY = "CG-wAukVxNxrR322gkZYEgZWtV1"
 
-    def __init__(self, prod=True):
+    def __init__(self, alert_type="TEST"):
         self.cg = CoinGeckoAPI(api_key=self.COINGECKO_API_KEY)
-        self.tg_bot = TelegramBot(prod=prod, alert=False)
+        self.tg_bot = TelegramBot(alert_type=alert_type)
 
     def get_exchanges(self, num=300):
         exchanges = self.get_all_exchanges()
@@ -149,5 +149,5 @@ class CoinGecKo:
 
 
 if __name__ == '__main__':
-    coin = CoinGecKo(prod=False)
+    coin = CoinGecKo(alert_type='TEST')
     print(coin.get_all_exchanges())
