@@ -206,7 +206,7 @@ def alert_ten_time_bar(msg):
         else:
             exchange_bar_dict[symbol] = [current_time, vol]
     elif len(exchange_bar_dict[symbol]) == 3:
-        if vol != 0.0 and vol >= 10 * exchange_bar_dict[symbol][1] and \
+        if vol != 0.0 and vol >= 50 * exchange_bar_dict[symbol][1] and \
                 (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
                  (symbol[-3:] == "BTC" and amount >= (alert_threshold / BTC_price))):
             add_msg_to_queue(f"{symbol} 15 min volume alert 3 bars: volume [{exchange_bar_dict[symbol][1]} "
