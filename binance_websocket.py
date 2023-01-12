@@ -7,60 +7,8 @@ from binance.lib.utils import config_logging
 from binance.websocket.spot.websocket_client import SpotWebsocketClient as Client
 from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
-from howtrader.trader.setting import SETTINGS
-
-# services
-# TG_VOLUME_ALERT = "-859234465"
-# TG_PRICE_ALERT = "-824512265"
-# tg_bot = TelegramBot(SETTINGS["PROD"], alert=False)
-# tg_bot.telegram_chat_id = TG_VOLUME_ALERT
-# tg_bot_price = TelegramBot(SETTINGS["PROD"], alert=False)
-# tg_bot_price.telegram_chat_id = TG_PRICE_ALERT
-# cg = CoinGecKo(SETTINGS["PROD"])
-# MAX_ERROR = 20
-
-# config_logging(logging, logging.INFO)
-#
-# # symbol->[timestamp, close1, close2]
-# # symbol->[timestamp, close]
-# exchange_bar_dict = defaultdict(list)
-# exchange_bar_dict_0 = defaultdict(list)
-# dict_lock = threading.Lock()
-#
-# # dict for 15min price alert: symbol->[price_change_rate, last_price]
-# price_dict = defaultdict(list)
-# price_lock = threading.Lock()
-
-# coin exchanges
-# exchanges = cg.get_500_usdt_exchanges(market_cap=False)
-# exchanges = [e.lower() for e in exchanges]
-# exchanges.sort()
-#
-# # message queue
-# msg_queue_lock = threading.Lock()
-# msg_queue = []
-#
-# # exchange count
-# exchange_count = 0
-#
-# # BTC_price
-# BTC_price = 17000
 
 
-# def add_msg_to_queue(msg):
-#     msg_queue_lock.acquire()
-#     msg_queue.append(msg)
-#     msg_queue_lock.release()
-#
-#
-# def send_msg_from_queue(tg_bot):
-#     while SETTINGS["ten_time_bar"]:
-#         if msg_queue:
-#             msg_queue_lock.acquire()
-#             msg = msg_queue.pop(0)
-#             tg_bot.safe_send_message(msg)
-#             msg_queue_lock.release()
-#         time.sleep(0.11)
 class BinanceWebsocketAlerts:
     MAX_ERROR = 20
     config_logging(logging, logging.INFO)
@@ -144,7 +92,7 @@ class BinanceWebsocketAlerts:
         id_count = 1
         start_time = time.time()
         error_count = 0
-        logging.info("start ten_time_bar_alert")
+        logging.info("start price_volume_alert")
 
         try:
             # setting up the tg volume alert thread
@@ -173,10 +121,9 @@ class BinanceWebsocketAlerts:
                 raise e
             time.sleep(1)
 
-
     def price_volume_alerts(self, msg):
         """
-        alert if second and third bar are both 10X first bar
+        alert if second bar is 10X first bar and third bar is 50X first bar
         alert if second bar is 50X first bar
         """
         # logging.info(f"msg: {msg}")
@@ -194,7 +141,7 @@ class BinanceWebsocketAlerts:
         vol = float(kline["v"])
         # logging.info(f"symbol: {symbol}")
         close = float(kline["c"])
-        amount = vol * close
+        amount = vol * close if symbol[-3:] != "BTC" else vol * close * self.BTC_price
 
         self.dict_lock.acquire()
         # update BTC_price
@@ -203,30 +150,28 @@ class BinanceWebsocketAlerts:
             logging.info(f"BTC_price: {self.BTC_price}")
 
         # two bars alert
-        if len(self.exchange_bar_dict_0[symbol]) == 2 and vol >= 50 * self.exchange_bar_dict[symbol][1] and \
-                (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
-                 (symbol[-3:] == "BTC" and amount >= (alert_threshold / self.BTC_price))):
+        if len(self.exchange_bar_dict_0[symbol]) == 2 and vol >= 50 * self.exchange_bar_dict_0[symbol][1] and amount >= alert_threshold:
+                # (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
+                #  (symbol[-3:] == "BTC" and amount >= (alert_threshold / self.BTC_price))):
             self.tg_bot_volume.add_msg_to_queue(f"{symbol} 15 min volume alert 2 bars: volume "
-                                                f"[{self.exchange_bar_dict[symbol][1]} "
+                                                f"[{self.exchange_bar_dict_0[symbol][1]} "
                                                 f"-> {vol}]\namount: ${math.ceil(amount)}")
-            self.exchange_bar_dict_0[symbol] = [current_time, vol]
-        else:
-            self.exchange_bar_dict_0[symbol] = [current_time, vol]
+        self.exchange_bar_dict_0[symbol] = [current_time, vol]
         # logging.info(f"exchange_bar_dict_0: {exchange_bar_dict_0}")
 
         # three bars alert
         if len(self.exchange_bar_dict[symbol]) == 2:
-            if vol != 0.0 and vol >= 10 * self.exchange_bar_dict[symbol][1] and\
-                    (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
-                     (symbol[-3:] == "BTC" and amount >= (alert_threshold / self.BTC_price))):
+            if vol != 0.0 and vol >= 10 * self.exchange_bar_dict[symbol][1] and amount >= alert_threshold:
+                    # (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
+                    #  (symbol[-3:] == "BTC" and amount >= (alert_threshold / self.BTC_price))):
                 self.exchange_bar_dict[symbol].append(vol)
                 self.exchange_bar_dict[symbol][0] = current_time
             else:
                 self.exchange_bar_dict[symbol] = [current_time, vol]
         elif len(self.exchange_bar_dict[symbol]) == 3:
-            if vol != 0.0 and vol >= 50 * self.exchange_bar_dict[symbol][1] and \
-                    (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
-                     (symbol[-3:] == "BTC" and amount >= (alert_threshold / self.BTC_price))):
+            if vol != 0.0 and vol >= 50 * self.exchange_bar_dict[symbol][1] and amount >= alert_threshold:
+                    # (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
+                    #  (symbol[-3:] == "BTC" and amount >= (alert_threshold / self.BTC_price))):
                 self.tg_bot_volume.add_msg_to_queue(f"{symbol} 15 min volume alert 3 bars: volume "
                                                     f"[{self.exchange_bar_dict[symbol][1]} "
                                                     f"-> {self.exchange_bar_dict[symbol][2]} -> {vol}]"
