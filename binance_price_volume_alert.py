@@ -27,6 +27,7 @@ class BinancePriceVolumeAlert:
 
         # exchange count
         self.exchange_count = 0
+        self.max_exchange_count = 344
 
         # monitored exchanges
         self.exchanges = self.cg.get_500_usdt_exchanges(market_cap=False)
@@ -49,7 +50,7 @@ class BinancePriceVolumeAlert:
         """
         rate_threshold = 5.0
         while self.running:
-            if self.exchange_count == 342:
+            if self.exchange_count == self.max_exchange_count:
                 self.dict_lock.acquire()
                 self.exchange_count = 0
                 price_lists = [[k, v[0]] for k, v in self.price_dict.items()]
@@ -114,7 +115,8 @@ class BinancePriceVolumeAlert:
             )
             id_count += 1
 
-            time.sleep(88200.0 - ((time.time() - start_time) % 86400.0))
+            # time.sleep(88200.0 - ((time.time() - start_time) % 86400.0))
+            time.sleep(86400.0 * 365)
             logging.info("closing ws connection")
             klines_client.stop()
             self.running = False
@@ -186,6 +188,7 @@ class BinancePriceVolumeAlert:
 
         # price alert
         self.exchange_count += 1
+        self.max_exchange_count = max(self.exchange_count, self.max_exchange_count)
         logging.info(f"exchange_count: {self.exchange_count}")
 
         if symbol not in self.price_dict:

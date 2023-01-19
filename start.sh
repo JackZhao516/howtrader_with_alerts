@@ -9,7 +9,7 @@ do
     then
 #        conda activate mytrader
         rm -rf alert_5min.log
-        nohup python3 binance_websocket.py > alert_5min.log 2>&1 &
+        nohup python3 binance_price_volume_alert.py > alert_15min.log 2>&1 &
 
         echo "start"
         sleep 1s
