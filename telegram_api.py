@@ -15,6 +15,11 @@ class TelegramBot:
     MAX_ERROR = 10
 
     def __init__(self, alert_type="CG_ALERT", daemon=False):
+        """
+        ::param alert_type: "CG_ALERT", "CG_SUM", "TEST", "VOLUME", "PRICE"
+        ::param daemon: True if the thread is a daemon thread, False otherwise
+                        need to call stop() explicitly if daemon is True
+        """
         self.telegram_chat_id = self.TELEGRAM_IDS[alert_type]
         self.error = 0
 
@@ -27,7 +32,8 @@ class TelegramBot:
             self.msg_thread.start()
 
     def send_message(self, message):
-        api_url = f'https://api.telegram.org/bot{self.TOKEN}/sendMessage?chat_id={self.telegram_chat_id}&text={message}'
+        api_url = f'https://api.telegram.org/bot{self.TOKEN}/' \
+                  f'sendMessage?chat_id={self.telegram_chat_id}&text={message}'
         requests.get(api_url, timeout=10).json()
 
     def safe_send_message(self, message):

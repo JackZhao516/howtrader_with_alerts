@@ -65,7 +65,7 @@ class Strategy4h12h(CtaTemplate):
         self.am4h = ArrayManager()
         self.bg12h = BarGenerator(self.on_bar, 12, self.on_12h_bar, Interval.HOUR)
         self.am12h = ArrayManager()
-        self.tg_bot = TelegramBot()
+        self.tg_bot = TelegramBot("TEST")
 
     def on_init(self):
         """

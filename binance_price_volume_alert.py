@@ -9,7 +9,7 @@ from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
 
 
-class BinanceWebsocketAlerts:
+class BinancePriceVolumeAlert:
     MAX_ERROR = 20
     config_logging(logging, logging.INFO)
 
@@ -44,6 +44,9 @@ class BinanceWebsocketAlerts:
         self.tg_bot_test = TelegramBot("TEST")
 
     def monitor_price_change(self):
+        """
+        For price change alert
+        """
         rate_threshold = 5.0
         while self.running:
             if self.exchange_count == 342:
@@ -86,6 +89,9 @@ class BinanceWebsocketAlerts:
 
     def klines_alert(self):
         """
+        For volume/price alert
+        main function
+
         alert if second and third bar are both ten times larger than first bar
         for top 500 market cap USDT exchanges on binance
         """
@@ -123,6 +129,8 @@ class BinanceWebsocketAlerts:
 
     def price_volume_alerts(self, msg):
         """
+        price/volume alert callback function
+
         alert if second bar is 10X first bar and third bar is 50X first bar
         alert if second bar is 50X first bar
         """
@@ -150,9 +158,8 @@ class BinanceWebsocketAlerts:
             logging.info(f"BTC_price: {self.BTC_price}")
 
         # two bars alert
-        if len(self.exchange_bar_dict_0[symbol]) == 2 and vol >= 50 * self.exchange_bar_dict_0[symbol][1] and amount >= alert_threshold:
-                # (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
-                #  (symbol[-3:] == "BTC" and amount >= (alert_threshold / self.BTC_price))):
+        if len(self.exchange_bar_dict_0[symbol]) == 2 and \
+                vol >= 50 * self.exchange_bar_dict_0[symbol][1] and amount >= alert_threshold:
             self.tg_bot_volume.add_msg_to_queue(f"{symbol} 15 min volume alert 2 bars: volume "
                                                 f"[{self.exchange_bar_dict_0[symbol][1]} "
                                                 f"-> {vol}]\namount: ${math.ceil(amount)}")
@@ -162,16 +169,12 @@ class BinanceWebsocketAlerts:
         # three bars alert
         if len(self.exchange_bar_dict[symbol]) == 2:
             if vol != 0.0 and vol >= 10 * self.exchange_bar_dict[symbol][1] and amount >= alert_threshold:
-                    # (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
-                    #  (symbol[-3:] == "BTC" and amount >= (alert_threshold / self.BTC_price))):
                 self.exchange_bar_dict[symbol].append(vol)
                 self.exchange_bar_dict[symbol][0] = current_time
             else:
                 self.exchange_bar_dict[symbol] = [current_time, vol]
         elif len(self.exchange_bar_dict[symbol]) == 3:
             if vol != 0.0 and vol >= 50 * self.exchange_bar_dict[symbol][1] and amount >= alert_threshold:
-                    # (((symbol[-4:] == "USDT" or symbol[-4:] == "BUSD") and amount >= alert_threshold) or
-                    #  (symbol[-3:] == "BTC" and amount >= (alert_threshold / self.BTC_price))):
                 self.tg_bot_volume.add_msg_to_queue(f"{symbol} 15 min volume alert 3 bars: volume "
                                                     f"[{self.exchange_bar_dict[symbol][1]} "
                                                     f"-> {self.exchange_bar_dict[symbol][2]} -> {vol}]"
@@ -183,7 +186,7 @@ class BinanceWebsocketAlerts:
 
         # price alert
         self.exchange_count += 1
-        # logging.info(f"exchange_count: {exchange_count}")
+        logging.info(f"exchange_count: {self.exchange_count}")
 
         if symbol not in self.price_dict:
             self.price_dict[symbol] = [0.0, close]
@@ -194,4 +197,4 @@ class BinanceWebsocketAlerts:
 
 
 if __name__ == "__main__":
-    BinanceWebsocketAlerts().klines_alert()
+    BinancePriceVolumeAlert().klines_alert()

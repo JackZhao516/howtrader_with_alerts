@@ -15,8 +15,8 @@ from crawl_coingecko import CoinGecKo
 from alert_coingecko import CoinGecKo12H, alert_coins, close_all_threads
 from telegram_api import TelegramBot
 
-tg_bot = TelegramBot(SETTINGS["PROD"], alert=False)
-cg = CoinGecKo(SETTINGS["PROD"])
+tg_bot = TelegramBot("TEST")
+cg = CoinGecKo("TEST")
 
 usdt_gateway_setting = {
         "key": "ZaipNokA3CkFb0fQsp7D2mqmev9RAHPrgW0SnUXVhReXfgTujN7SJB0Wu4atl20M",
@@ -36,7 +36,7 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
     while True:
         setting = {}
         exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
-        coins_thread = alert_coins(coin_ids, coin_symbols, True)
+        # coins_thread = alert_coins(coin_ids, coin_symbols, True)
 
         for exchange in exchanges:
             cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
@@ -48,7 +48,7 @@ def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
         main_engine.write_log("start cta strategies")
         sleep(60 * 60 * 24 * 3) # 3 days
         cta_engine.close()
-        close_all_threads(coins_thread)
+        # close_all_threads(coins_thread)
         sleep(5)
         main_engine.write_log("re-run alert_100")
 
