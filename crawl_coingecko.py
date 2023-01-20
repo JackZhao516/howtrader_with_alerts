@@ -5,17 +5,21 @@ import requests
 import numpy as np
 from pycoingecko import CoinGeckoAPI
 import datetime
+import threading
 
 
 class CoinGecKo:
     COINGECKO_API_KEY = "CG-wAukVxNxrR322gkZYEgZWtV1"
+    DATA_DOWNLOAD_ROOT_URL = "https://data.binance.vision/data/spot/daily/klines/"
 
     def __init__(self, alert_type="TEST"):
         self.cg = CoinGeckoAPI(api_key=self.COINGECKO_API_KEY)
         self.tg_bot = TelegramBot(alert_type=alert_type)
+        self.popular_exchanges = None
+        self.popular_exchanges_lock = threading.Lock()
 
     def get_exchanges(self, num=300):
-        exchanges = self.get_all_exchanges()
+        exchanges = set(self.get_all_popular_exchanges())
         res = []
         coingeco_coins = []
         coingeco_names = []
@@ -60,14 +64,66 @@ class CoinGecKo:
         return res, coingeco_coins, coingeco_names
 
     def get_all_exchanges(self):
+        """
+        Get all exchanges on binance
+        """
         api_url = f'https://api.binance.com/api/v3/exchangeInfo?permissions=SPOT'
         response = requests.get(api_url, timeout=10).json()
         exchanges = {exchange['symbol'] for exchange in response['symbols']}
         return exchanges
 
-    def get_500_usdt_exchanges(self, market_cap=True):
-        # logger.info("Getting all 500 coins")
+    def get_all_popular_exchanges(self, time_on_binance=102):
+        """
+        BTC, ETH, USDT, BUSD exchanges older than time_on_binance days
+        """
         exchanges = self.get_all_exchanges()
+        res = []
+
+        # choose BTC, ETH, USDT, BUSD exchanges
+        for exchange in exchanges:
+            if exchange[-3:] == "BTC" or exchange[-3:] == "ETH" or \
+                    exchange[-4:] == "USDT" or exchange[-4:] == "BUSD":
+                res.append(exchange)
+        self.popular_exchanges = set(res)
+
+        # test exchange old enough and still on binance
+        start_time = datetime.datetime.now() - datetime.timedelta(days=time_on_binance)
+        start_time_now = datetime.datetime.now() - datetime.timedelta(days=1)
+        start_time_str = start_time.strftime("%Y-%m-%d")
+        start_time_now_str = start_time_now.strftime("%Y-%m-%d")
+
+        threads = []
+        for exchange in res:
+            t = threading.Thread(target=self.get_all_popular_exchanges_helper,
+                                 args=(exchange, start_time_str, start_time_now_str))
+            threads.append(t)
+            t.start()
+        for t in threads:
+            t.join()
+        res = list(self.popular_exchanges)
+        print(res)
+        return res
+
+    def get_all_popular_exchanges_helper(self, exchange, start_time_str, start_time_now_str):
+        """
+        Helper function for get_all_popular_exchanges
+        """
+        time_frames = ["12h", "4h", "1d"]
+        for time_frame in time_frames:
+            url = f"{self.DATA_DOWNLOAD_ROOT_URL}{exchange}/{time_frame}/" \
+                  f"{exchange}-{time_frame}-{start_time_str}.zip"
+            url_now = f"{self.DATA_DOWNLOAD_ROOT_URL}{exchange}/{time_frame}/" \
+                      f"{exchange}-{time_frame}-{start_time_now_str}.zip"
+            response = requests.get(url, timeout=10)
+            response_now = requests.get(url_now, timeout=10)
+            if response.status_code != 200 or response_now.status_code != 200:
+                self.popular_exchanges_lock.acquire()
+                self.popular_exchanges.remove(exchange)
+                self.popular_exchanges_lock.release()
+                return
+
+    def get_500_usdt_exchanges(self, market_cap=True):
+        exchanges = self.get_all_popular_exchanges(time_on_binance=1)
         # logger.info(f"Getting all {len(exchanges)}")
         res = []
         if market_cap:
@@ -93,6 +149,7 @@ class CoinGecKo:
                 if i[-3:] == "BTC" and i[:-3] not in coins:
                     res.append(i)
             res = list(set(res))
+            print(len(res))
             logging.info(f"Got {len(res)} coins")
         return res
 
@@ -120,7 +177,7 @@ class CoinGecKo:
                 res.append([volume_increase, id[1], id[0]])
 
         res = sorted(res, key=lambda x: x[0], reverse=True)
-        exchanges = self.get_all_exchanges()
+        exchanges = self.get_all_popular_exchanges()
         coingeco_coins, coingeco_names, ex = [], [], []
 
         for volume_increase, symbol, coin_id in res:
@@ -150,4 +207,15 @@ class CoinGecKo:
 
 if __name__ == '__main__':
     coin = CoinGecKo(alert_type='TEST')
-    print(coin.get_all_exchanges())
+    # exchanges = coin.get_all_popular_exchanges()
+    # exchanges = set(exchanges)
+    # coins = ["APTUSDT", "APTBTC", "BTTUSDT", "BTTBTC", "LUNABTC", "LUNAETH",
+    #          "DAIBTC", "DAIUSDT", "HNTBTC", "HNTUSDT", "OSMOBTC", "OSMOUSDT",
+    #          "RPLBTC", "RPLUSDT", "TUSDBTC", "TUSDETH", "TUSDUSDT", "USDCUSDT",
+    #          "USDPUSDT"]
+    #
+    # for c in coins:
+    #     if c in exchanges:
+    #         print(c)
+
+    coin.get_500_usdt_exchanges(market_cap=False)

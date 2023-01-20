@@ -13,6 +13,8 @@ from binance.lib.utils import config_logging
 from binance.websocket.spot.websocket_client import SpotWebsocketClient as Client
 
 # TODO: find new coins in binance, find all available 1min, 4h, 12h
+
+
 class BinanceIndicatorAlert:
     """
     first download, then run a websocket
@@ -144,10 +146,10 @@ class BinanceIndicatorAlert:
                 i = self.update_close(time_frame, i, exchange, close)
         logging.warning(f"Download {exchange} {time_frame}h klines done")
         self.close_lock.acquire()
-        logging.warning(f"{exchange} {time_frame}h:{self.close[exchange.lower()][str(time_frame)]}")
+        # logging.warning(f"{exchange} {time_frame}h:{self.close[exchange.lower()][str(time_frame)]}")
         self.close_lock.release()
 
-    def update_close(self, time_frame, i, exchange, close=None, copy=False):
+    def update_close(self, time_frame, i, exchange, close=None, copy=False, log=False):
         self.close_lock.acquire()
         time_frame = str(time_frame)
         exchange = exchange.lower()
@@ -166,6 +168,9 @@ class BinanceIndicatorAlert:
             elif i == self.window:
                 self.close[exchange][time_frame] = np.roll(self.close[exchange][time_frame], -1)
                 self.close[exchange][time_frame][-1] = self.close[exchange][time_frame][-2]
+
+        # if log:
+        #     logging.warning(f"{exchange} ma_{time_frame}h:{self.close[exchange][time_frame]}")
         self.close_lock.release()
         return i
 
@@ -252,7 +257,7 @@ class BinanceIndicatorAlert:
             self.alert_helper_1m(close, 4, exchange)
             self.alert_helper_1m(close, 12, exchange)
             self.last_close_1m[exchange] = close
-            logging.warning(f"{exchange} 1m current {self.last_close_1m[exchange]}")
+            # logging.warning(f"{exchange} 1m current {self.last_close_1m[exchange]}")
             self.close_lock.release()
 
     def alert_helper_1m(self, close, timeframe, exchange):
@@ -262,8 +267,10 @@ class BinanceIndicatorAlert:
 
         if close > current_ma > self.last_close_1m[exchange]:
             self.tg_bot.safe_send_message(f"{exchange}_{self.mode} spot crossover {timeframe_str} ma{self.window}")
+            logging.warning(f"{exchange}_{self.mode} ma {current_ma}, close {close}")
         elif close < current_ma < self.last_close_1m[exchange]:
             self.tg_bot.safe_send_message(f"{exchange}_{self.mode} spot crossunder {timeframe_str} ma{self.window}")
+            logging.warning(f"{exchange}_{self.mode} ma {current_ma}, close {close}")
 
 
 if __name__ == "__main__":

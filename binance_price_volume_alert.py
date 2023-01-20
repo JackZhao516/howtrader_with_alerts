@@ -25,14 +25,14 @@ class BinancePriceVolumeAlert:
         self.exchange_bar_dict_0 = defaultdict(list)
         self.dict_lock = threading.Lock()
 
-        # exchange count
-        self.exchange_count = 0
-        self.max_exchange_count = 344
-
         # monitored exchanges
         self.exchanges = self.cg.get_500_usdt_exchanges(market_cap=False)
         self.exchanges = [e.lower() for e in self.exchanges]
         self.exchanges.sort()
+
+        # exchange count
+        self.exchange_count = 0
+        self.max_exchange_count = len(self.exchanges)
 
         # dict for 15min price alert: symbol->[price_change_rate, last_price]
         self.price_dict = defaultdict(list)
@@ -97,7 +97,6 @@ class BinancePriceVolumeAlert:
         for top 500 market cap USDT exchanges on binance
         """
         id_count = 1
-        start_time = time.time()
         error_count = 0
         logging.info("start price_volume_alert")
 
