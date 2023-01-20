@@ -2,6 +2,8 @@ import sys
 import csv
 from time import sleep
 from datetime import datetime, time
+import threading
+import logging
 from logging import INFO
 
 from howtrader.event import EventEngine
@@ -14,6 +16,7 @@ from howtrader.app.cta_strategy.base import EVENT_CTA_LOG
 from crawl_coingecko import CoinGecKo
 from alert_coingecko import CoinGecKo12H, alert_coins, close_all_threads
 from telegram_api import TelegramBot
+from binance_indicator_alert import BinanceIndicatorAlert
 
 tg_bot = TelegramBot("TEST")
 cg = CoinGecKo("TEST")
@@ -26,31 +29,39 @@ usdt_gateway_setting = {
     }
 
 
-# last={"ETH":['BNBETH', 'XRPETH', 'SOLETH', 'MATICETH', 'TRXETH', 'UNIETH', 'WBTCETH', 'ATOMETH', 'LTCETH', 'LINKETH', 'ETCETH', 'XLMETH', 'FTTETH', 'XMRETH', 'ALGOETH', 'VETETH', 'APEETH', 'FILETH', 'EGLDETH', 'DASHETH', 'HOTETH', 'ROSEETH', 'GLMETH', 'IOTXETH', 'ONTETH', 'OPETH', 'VGXETH', 'LSKETH', 'PUNDIXETH', 'SNTETH', 'PEOPLEETH', 'GALETH', 'STEEMETH', 'DENTETH', 'RLCETH', 'STRAXETH', 'FUNETH', 'SSVETH', 'QKCETH', 'STMXETH', 'XVGETH', 'BONDETH', 'MFTETH', 'UNFIETH', 'WANETH', 'BELETH', 'BLZETH', 'LITETH', 'KEYETH', 'WINGETH', 'ADXETH', 'UFTETH', 'DEXEETH', 'PROSETH', 'VIBETH', 'BETHETH']
-# , "BTC": ['BNBBTC', 'XRPBTC', 'DOGEBTC', 'MATICBTC', 'TRXBTC', 'UNIBTC', 'ATOMBTC', 'LTCBTC', 'LINKBTC', 'XLMBTC', 'XMRBTC', 'ALGOBTC', 'BCHBTC', 'QNTBTC', 'APEBTC', 'EGLDBTC', 'CHZBTC', 'MKRBTC', 'CAKEBTC', 'PAXGBTC', 'NEXOBTC', 'ENSBTC', 'RVNBTC', 'COMPBTC', 'TWTBTC', 'CVXBTC', 'DCRBTC', 'GMXBTC', 'BTGBTC', 'GLMBTC', 'IOTXBTC', 'SUSHIBTC', 'YFIBTC', 'LPTBTC', 'POLYBTC', 'FLUXBTC', 'HIVEBTC', 'INJBTC', 'VGXBTC', 'RENBTC', 'COTIBTC', 'API3BTC', 'SNTBTC', 'SYSBTC', 'PROMBTC', 'PYRBTC', 'STRAXBTC', 'ARDRBTC', 'MBOXBTC', 'STEEMBTC', 'RADBTC', 'CTSIBTC', 'RLCBTC', 'SSVBTC', 'QKCBTC', 'CTKBTC', 'XVSBTC', 'STPTBTC', 'DOCKBTC', 'STMXBTC', 'ANTBTC', 'SANTOSBTC', 'STGBTC', 'FETBTC', 'AERGOBTC', 'DODOBTC', 'DUSKBTC', 'UTKBTC', 'NEBLBTC', 'ALPHABTC', 'AGIXBTC']
-# , "USDT": ['BNBUSDT', 'XRPUSDT', 'MATICUSDT', 'ATOMUSDT', 'LINKUSDT', 'XLMUSDT', 'ALGOUSDT', 'LUNCUSDT', 'QNTUSDT', 'CHZUSDT', 'MKRUSDT', 'CAKEUSDT', 'NEXOUSDT', 'ENSUSDT', 'RVNUSDT', 'LUNAUSDT', 'COMPUSDT', 'GMXUSDT', 'RSRUSDT', 'SUSHIUSDT', 'POLYUSDT', 'FLUXUSDT', 'INJUSDT', 'VGXUSDT', 'COTIUSDT', 'REEFUSDT', 'PYRUSDT', 'TRIBEUSDT', 'RLCUSDT', 'SANTOSUSDT', 'STGUSDT', 'ERNUSDT', 'ALPACAUSDT', 'SFPUSDT', 'FORTHUSDT', 'ALPINEUSDT', 'LAZIOUSDT', 'VITEUSDT', 'CITYUSDT', 'BARUSDT', 'LEVERUSDT', 'BEAMUSDT']}
+def alert_100():
+    # while True:
+    #     setting = {}
+    #     exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
+    #     # coins_thread = alert_coins(coin_ids, coin_symbols, True)
+    #
+    #     for exchange in exchanges:
+    #         cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
+    #
+    #     cta_engine.init_all_strategies()
+    #     main_engine.write_log(cta_engine.print_strategy())
+    #     sleep(80 * len(exchanges))  # Leave enough time to complete strategy initialization
+    #     cta_engine.start_all_strategies()
+    #     main_engine.write_log("start cta strategies")
+    #     sleep(60 * 60 * 24 * 3) # 3 days
+    #     cta_engine.close()
+    #     # close_all_threads(coins_thread)
+    #     sleep(5)
+    #     main_engine.write_log("re-run alert_100")
+
+    exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
+    # coins_thread = alert_coins(coin_ids, coin_symbols, True)
+    execution_time = 60 * 60
+    logging.warning(f"start binance indicator alert")
+    logging.warning(f"exchanges: {exchanges}")
+    BinanceIndicatorAlert(exchanges, execution_time=execution_time)
+
+    # close_all_threads(coins_thread)
+    logging.warning("alert_100 finished")
 
 
-def alert_100(cta_engine: CtaEngine, main_engine: MainEngine):
-    main_engine.write_log("init cta strategies")
-    while True:
-        setting = {}
-        exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
-        # coins_thread = alert_coins(coin_ids, coin_symbols, True)
 
-        for exchange in exchanges:
-            cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
 
-        cta_engine.init_all_strategies()
-        main_engine.write_log(cta_engine.print_strategy())
-        sleep(80 * len(exchanges))  # Leave enough time to complete strategy initialization
-        cta_engine.start_all_strategies()
-        main_engine.write_log("start cta strategies")
-        sleep(60 * 60 * 24 * 3) # 3 days
-        cta_engine.close()
-        # close_all_threads(coins_thread)
-        sleep(5)
-        main_engine.write_log("re-run alert_100")
 
 
 def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
@@ -176,40 +187,36 @@ def run(mode="alert_100"):
     """
     Running in the child process.
     """
-    SETTINGS["log.file"] = True
-    event_engine = EventEngine()
-    main_engine: MainEngine = MainEngine(event_engine)
-    main_engine.add_gateway(BinanceSpotGateway)
-    cta_engine: CtaEngine = main_engine.add_app(CtaStrategyApp)
-    main_engine.write_log("setup main engine")
-
-    log_engine: LogEngine = main_engine.get_engine("log")
-    event_engine.register(EVENT_CTA_LOG, log_engine.process_log_event)
-    main_engine.write_log("register event listener")
-
-    main_engine.connect(usdt_gateway_setting, "BINANCE_SPOT")
-    main_engine.write_log("connect binance spot gate way")
-    sleep(2)
-
-    cta_engine.init_engine()
-    main_engine.write_log("set up cta engine")
-    tg_bot.send_message(f"start {mode}")
+    # SETTINGS["log.file"] = True
+    # event_engine = EventEngine()
+    # main_engine: MainEngine = MainEngine(event_engine)
+    # main_engine.add_gateway(BinanceSpotGateway)
+    # cta_engine: CtaEngine = main_engine.add_app(CtaStrategyApp)
+    # main_engine.write_log("setup main engine")
+    #
+    # log_engine: LogEngine = main_engine.get_engine("log")
+    # event_engine.register(EVENT_CTA_LOG, log_engine.process_log_event)
+    # main_engine.write_log("register event listener")
+    #
+    # main_engine.connect(usdt_gateway_setting, "BINANCE_SPOT")
+    # main_engine.write_log("connect binance spot gate way")
+    # sleep(2)
+    #
+    # cta_engine.init_engine()
+    # main_engine.write_log("set up cta engine")
+    # tg_bot.send_message(f"start {mode}")
 
     if mode == "alert_100":
-        alert_100(cta_engine, main_engine)
-    elif mode == "alert_500":
-        alert_500(cta_engine, main_engine)
-    elif mode == "alert_300":
-        alert_300(cta_engine, main_engine)
+        alert_100()
+    # elif mode == "alert_500":
+    #     alert_500(cta_engine, main_engine)
+    # elif mode == "alert_300":
+    #     alert_300(cta_engine, main_engine)
 
     sleep(10)
 
 
 if __name__ == "__main__":
-    SETTINGS["log.active"] = True
-    SETTINGS["log.level"] = INFO
-    SETTINGS["log.console"] = True
-
     # sys.argv[1] is the mode
     if sys.argv[1] == "get_300":
         get_300()

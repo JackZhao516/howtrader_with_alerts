@@ -84,7 +84,7 @@ class BinancePriceVolumeAlert:
                     self.tg_bot_price.safe_send_message(f"15 min top 5 positive price change in %: {largest}")
                 if len(smallest) > 0:
                     self.tg_bot_price.safe_send_message(f"15 min top 5 negative price change in %: {smallest}")
-                logging.info(f"exchange_count: {self.exchange_count}")
+                # logging.info(f"exchange_count: {self.exchange_count}")
                 time.sleep(1)
                 self.dict_lock.release()
 
@@ -189,7 +189,7 @@ class BinancePriceVolumeAlert:
         # price alert
         self.exchange_count += 1
         self.max_exchange_count = max(self.exchange_count, self.max_exchange_count)
-        logging.info(f"exchange_count: {self.exchange_count}")
+        # logging.info(f"exchange_count: {self.exchange_count}")
 
         if symbol not in self.price_dict:
             self.price_dict[symbol] = [0.0, close]
