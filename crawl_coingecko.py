@@ -89,7 +89,7 @@ class CoinGecKo:
 
         # test exchange old enough and still on binance
         start_time = datetime.datetime.now() - datetime.timedelta(days=time_on_binance)
-        start_time_now = datetime.datetime.now() - datetime.timedelta(days=1)
+        start_time_now = datetime.datetime.now() - datetime.timedelta(days=2)
         start_time_str = start_time.strftime("%Y-%m-%d")
         start_time_now_str = start_time_now.strftime("%Y-%m-%d")
 
@@ -119,7 +119,7 @@ class CoinGecKo:
                       f"{exchange}-{time_frame}-{start_time_now_str}.zip"
             response = requests.get(url, timeout=1000, verify=False)
             response_now = requests.get(url_now, timeout=1000, verify=False)
-            print(f"{exchange} {start_time_now_str} {response.status_code} {response_now.status_code}")
+            # print(f"{exchange} {start_time_now_str} {response.status_code} {response_now.status_code}")
 
             if response.status_code != 200 or response_now.status_code != 200:
                 self.popular_exchanges_lock.acquire()
@@ -128,7 +128,7 @@ class CoinGecKo:
                 return
 
     def get_500_usdt_exchanges(self, market_cap=True):
-        exchanges = self.get_all_popular_exchanges(time_on_binance=1)
+        exchanges = self.get_all_popular_exchanges(time_on_binance=2)
         # logger.info(f"Getting all {len(exchanges)}")
         res = []
         if market_cap:
