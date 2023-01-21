@@ -5,35 +5,11 @@ import threading
 from collections import defaultdict
 from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
-from howtrader.trader.setting import SETTINGS
-
-############################################################################################################
-# maintain the msg queue
-msg_queue_lock = threading.Lock()
-msg_queue = []
-
-
-def add_msg_to_queue(msg):
-    msg_queue_lock.acquire()
-    msg_queue.append(msg)
-    msg_queue_lock.release()
-
-
-def send_msg_from_queue(tg_bot):
-    while SETTINGS["100"]:
-        if msg_queue:
-            msg_queue_lock.acquire()
-            msg = msg_queue.pop(0)
-            msg_queue_lock.release()
-            tg_bot.safe_send_message(msg)
-        sleep(1.1)
-
-############################################################################################################
 
 
 class CoinGecKo12H(CoinGecKo):
-    def __init__(self, coin_id, prod=True):
-        super().__init__(prod=prod)
+    def __init__(self, coin_id, alert_type="CG_ALERT"):
+        super().__init__(alert_type)
         self.coin_id = coin_id
         self.less_90_days = False
         self.ma_180 = self.h12_sma_180()
@@ -66,8 +42,9 @@ class CoinGecKo12H(CoinGecKo):
 
 
 ############################################################################################################
+running = True
 class CoinGecKoAlert(CoinGecKo):
-    def __init__(self, coin_id, symbol, alert_100=True):
+    def __init__(self, coin_id, symbol, alert_100=True, alert_type="CG_ALERT"):
         super().__init__("TEST")
         self.coin_id = coin_id
         self.symbol = symbol
@@ -75,7 +52,7 @@ class CoinGecKoAlert(CoinGecKo):
         self.less_34_days = False
         self.less_17_days = False
 
-        self.tg_bot = TelegramBot("TEST")
+        self.tg_bot = TelegramBot(alert_type, True)
 
         self.counter_12h = 0
         self.list_12h = None
@@ -218,20 +195,20 @@ class CoinGecKoAlert(CoinGecKo):
             # print(price, self.list_4h, self.counter_4h, self.ma_4h, np.sum(self.list_4h))
 
         if self.spot_over_ma_12h and price < self.ma_12h:
-            add_msg_to_queue(
+            self.tg_bot.add_msg_to_queue(
                  f"100_{self.symbol} spot: {str(price)} crossunder H12 ma180: {str(self.ma_12h)}")
             self.spot_over_ma_12h = False
         elif not self.spot_over_ma_12h and price > self.ma_12h:
-            add_msg_to_queue(
+            self.tg_bot.add_msg_to_queue(
                  f"100_{self.symbol} spot: {str(price)} crossover H12 ma180: {str(self.ma_12h)}")
             self.spot_over_ma_12h = True
 
         if self.spot_over_ma_4h and price < self.ma_4h:
-            add_msg_to_queue(
+            self.tg_bot.add_msg_to_queue(
                 f"100_{self.symbol} spot: {str(price)} crossunder H4 ma200: {str(self.ma_4h)}")
             self.spot_over_ma_4h = False
         elif not self.spot_over_ma_4h and price > self.ma_4h:
-            add_msg_to_queue(
+            self.tg_bot.add_msg_to_queue(
                 f"100_{self.symbol} spot: {str(price)} crossover H4 ma200: {str(self.ma_4h)}")
             self.spot_over_ma_4h = True
 
@@ -258,20 +235,20 @@ class CoinGecKoAlert(CoinGecKo):
             # print(price, self.list_4h, self.counter_4h, self.ma_4h, np.sum(self.list_4h))
 
         if self.spot_over_ma_1d and price < self.ma_1d:
-            add_msg_to_queue(
+            self.tg_bot.add_msg_to_queue(
                  f"500_{self.symbol} spot: {str(price)} crossunder D1 ma90: {str(self.ma_1d)}")
             self.spot_over_ma_1d = False
         elif not self.spot_over_ma_1d and price > self.ma_1d:
-            add_msg_to_queue(
+            self.tg_bot.add_msg_to_queue(
                  f"500_{self.symbol} spot: {str(price)} crossover D1 ma90: {str(self.ma_1d)}")
             self.spot_over_ma_1d = True
 
         if self.spot_over_ma_4h_500 and price < self.ma_4h_500:
-            add_msg_to_queue(
+            self.tg_bot.add_msg_to_queue(
                 f"500_{self.symbol} spot: {str(price)} crossunder H4 ma100: {str(self.ma_4h_500)}")
             self.spot_over_ma_4h_500 = False
         elif not self.spot_over_ma_4h_500 and price > self.ma_4h_500:
-            add_msg_to_queue(
+            self.tg_bot.add_msg_to_queue(
                 f"500_{self.symbol} spot: {str(price)} crossover H4 ma100: {str(self.ma_4h_500)}")
             self.spot_over_ma_4h_500 = True
         # print(f"{self.symbol} spot: {str(price)} D1: {str(self.ma_1d)} H4 ma100: {str(self.ma_4h_500)}")
@@ -306,13 +283,13 @@ class CoinGecKoAlert(CoinGecKo):
         return self.last_update_thread
 
 
-def alert_coins(coin_ids, coin_symbols, alert_100=True):
+def alert_coins(coin_ids, coin_symbols, alert_100=True, alert_type="CG_ALERT"):
     coins = {}
 
     # init coins
     for i, coin_id in enumerate(coin_ids):
         coin_symbol = coin_symbols[i]
-        coins[coin_id] = CoinGecKoAlert(coin_id, coin_symbol, SETTINGS["PROD"], alert_100)
+        coins[coin_id] = CoinGecKoAlert(coin_id, coin_symbol, alert_100, alert_type)
         coins[coin_id].alert_spot_init()
 
     # update coins
@@ -329,12 +306,13 @@ def loop_alert_helper(coins, coin_ids):
         coin_ids, r = coin_ids[:250], coin_ids[250:]
     start_time = time.time()
 
-    # setting up the msg queue
-    msg_thread = threading.Thread(target=send_msg_from_queue, args=(coins[coin_ids[0]].tg_bot,))
-    msg_thread.start()
-
+    # # setting up the msg queue
+    # msg_thread = threading.Thread(target=send_msg_from_queue, args=(coins[coin_ids[0]].tg_bot,))
+    # msg_thread.start()
+    global running
+    running = True
     # minute update
-    while SETTINGS["100"]:
+    while running:
         prices = cg.get_coins_markets(vs_currency='usd', ids=coin_ids, per_page=250, page=1)
         if r:
             prices += cg.get_coins_markets(vs_currency='usd', ids=r, per_page=250, page=2)
@@ -348,19 +326,23 @@ def loop_alert_helper(coins, coin_ids):
     for t in coins_threads.values():
         if t:
             t.join()
-    msg_thread.join()
+
+    for coin_item in coins.values():
+        coin_item.tg_bot.stop()
+
 
 
 def close_all_threads(thread):
-    SETTINGS["100"] = False
+    global running
+    running = False
     thread.join()
-    SETTINGS["100"] = True
+    running = True
 
 
 if __name__ == '__main__':
 
     from crawl_coingecko import CoinGecKo
-    cg = CoinGecKo(SETTINGS["PROD"])
+    cg = CoinGecKo("TEST")
     exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
     t = alert_coins(coin_ids, coin_symbols, True)
     sleep(140)

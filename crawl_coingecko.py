@@ -21,6 +21,7 @@ class CoinGecKo:
 
     def get_exchanges(self, num=300):
         exchanges = set(self.get_all_popular_exchanges())
+        # exchanges = set(self.get_all_exchanges())
         res = []
         coingeco_coins = []
         coingeco_names = []
@@ -212,7 +213,7 @@ class CoinGecKo:
 
 if __name__ == '__main__':
     coin = CoinGecKo(alert_type='TEST')
-    exchanges = coin.get_all_popular_exchanges()
+    # exchanges = coin.get_all_popular_exchanges()
     # exchanges = set(exchanges)
     # coins = ["APTUSDT", "APTBTC", "BTTUSDT", "BTTBTC", "LUNABTC", "LUNAETH",
     #          "DAIBTC", "DAIUSDT", "HNTBTC", "HNTUSDT", "OSMOBTC", "OSMOUSDT",
@@ -223,4 +224,4 @@ if __name__ == '__main__':
     #     if c in exchanges:
     #         print(c)
 
-    # coin.get_500_usdt_exchanges(market_cap=False)
+    coin.get_500_usdt_exchanges(market_cap=False)
