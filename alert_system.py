@@ -50,14 +50,14 @@ def alert_100():
     #     main_engine.write_log("re-run alert_100")
     logging.info("alert_100")
     exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
-    logging.warning("start coingecko alert")
-    coins_thread = alert_coins(coin_ids, coin_symbols, True)
+    # logging.warning("start coingecko alert")
+    # coins_thread = alert_coins(coin_ids, coin_symbols, True)
     execution_time = 60 * 60 * 24 * 3
     logging.warning(f"start binance indicator alert")
     logging.warning(f"exchanges: {len(exchanges)}, coins: {len(coin_ids)}")
     BinanceIndicatorAlert(exchanges, execution_time=execution_time)
 
-    close_all_threads(coins_thread)
+    # close_all_threads(coins_thread)
     logging.warning("alert_100 finished")
 
 

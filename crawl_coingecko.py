@@ -6,7 +6,8 @@ import numpy as np
 from pycoingecko import CoinGeckoAPI
 import datetime
 import threading
-
+import urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class CoinGecKo:
     COINGECKO_API_KEY = "CG-wAukVxNxrR322gkZYEgZWtV1"
@@ -93,11 +94,13 @@ class CoinGecKo:
         start_time_now_str = start_time_now.strftime("%Y-%m-%d")
 
         threads = []
+        # res = ["BTCUSDT"]
         for exchange in res:
             t = threading.Thread(target=self.get_all_popular_exchanges_helper,
                                  args=(exchange, start_time_str, start_time_now_str))
             threads.append(t)
             t.start()
+            # sleep(0.1)
         for t in threads:
             t.join()
         res = list(self.popular_exchanges)
@@ -114,8 +117,10 @@ class CoinGecKo:
                   f"{exchange}-{time_frame}-{start_time_str}.zip"
             url_now = f"{self.DATA_DOWNLOAD_ROOT_URL}{exchange}/{time_frame}/" \
                       f"{exchange}-{time_frame}-{start_time_now_str}.zip"
-            response = requests.get(url, timeout=10)
-            response_now = requests.get(url_now, timeout=10)
+            response = requests.get(url, timeout=1000, verify=False)
+            response_now = requests.get(url_now, timeout=1000, verify=False)
+            # print(f"{exchange} {time_frame} {response.status_code} {response_now.status_code}")
+
             if response.status_code != 200 or response_now.status_code != 200:
                 self.popular_exchanges_lock.acquire()
                 self.popular_exchanges.remove(exchange)
@@ -207,7 +212,7 @@ class CoinGecKo:
 
 if __name__ == '__main__':
     coin = CoinGecKo(alert_type='TEST')
-    # exchanges = coin.get_all_popular_exchanges()
+    exchanges = coin.get_all_popular_exchanges()
     # exchanges = set(exchanges)
     # coins = ["APTUSDT", "APTBTC", "BTTUSDT", "BTTBTC", "LUNABTC", "LUNAETH",
     #          "DAIBTC", "DAIUSDT", "HNTBTC", "HNTUSDT", "OSMOBTC", "OSMOUSDT",
@@ -218,4 +223,4 @@ if __name__ == '__main__':
     #     if c in exchanges:
     #         print(c)
 
-    coin.get_500_usdt_exchanges(market_cap=False)
+    # coin.get_500_usdt_exchanges(market_cap=False)

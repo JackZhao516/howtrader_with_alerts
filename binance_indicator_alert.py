@@ -83,7 +83,7 @@ class BinanceIndicatorAlert:
 
             try:
                 # download single day csv file
-                response = requests.get(url)
+                response = requests.get(url, timeout=100)
                 open(f"{exchange}.zip", "wb").write(response.content)
                 with zipfile.ZipFile(f"{exchange}.zip", "r") as zip_ref:
                     zip_ref.extractall(csv_dir)

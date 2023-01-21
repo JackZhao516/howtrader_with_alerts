@@ -67,15 +67,15 @@ class CoinGecKo12H(CoinGecKo):
 
 ############################################################################################################
 class CoinGecKoAlert(CoinGecKo):
-    def __init__(self, coin_id, symbol, prod=True, alert_100=True):
-        super().__init__(prod=prod)
+    def __init__(self, coin_id, symbol, alert_100=True):
+        super().__init__("TEST")
         self.coin_id = coin_id
         self.symbol = symbol
         self.less_90_days = False
         self.less_34_days = False
         self.less_17_days = False
 
-        self.tg_bot = TelegramBot(prod, alert=True)
+        self.tg_bot = TelegramBot("TEST")
 
         self.counter_12h = 0
         self.list_12h = None
