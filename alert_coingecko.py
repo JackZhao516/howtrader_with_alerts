@@ -2,10 +2,11 @@ import time
 from time import sleep
 import numpy as np
 import threading
+import logging
 from collections import defaultdict
 from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
-
+from binance.lib.utils import config_logging
 
 class CoinGecKo12H(CoinGecKo):
     def __init__(self, coin_id, alert_type="CG_ALERT"):
@@ -43,6 +44,7 @@ class CoinGecKo12H(CoinGecKo):
 
 ############################################################################################################
 running = True
+config_logging(logging, logging.INFO)
 class CoinGecKoAlert(CoinGecKo):
     def __init__(self, coin_id, symbol, alert_100=True, alert_type="CG_ALERT"):
         super().__init__("TEST")
@@ -266,6 +268,7 @@ class CoinGecKoAlert(CoinGecKo):
         if self.alert_100:
             self.h12_init()
             self.h4_init()
+            logging.info(f"100_{self.symbol} coingecko init done")
         else:
             self.d1_init()
             self.h4_500_init()
@@ -293,6 +296,7 @@ class CoinGecKoAlert(CoinGecKo):
 
 
 def alert_coins(coin_ids, coin_symbols, alert_100=True, alert_type="CG_ALERT"):
+    logging.info(f"alert_coins coingecko init start")
     coins = {}
 
     # init coins
@@ -302,6 +306,7 @@ def alert_coins(coin_ids, coin_symbols, alert_100=True, alert_type="CG_ALERT"):
         coins[coin_id].alert_spot_init()
 
     # update coins
+    logging.info(f"alert_coins coingecko update start")
     t = threading.Thread(target=loop_alert_helper, args=(coins, coin_ids))
     t.start()
     return t
@@ -354,7 +359,7 @@ if __name__ == '__main__':
     cg = CoinGecKo("TEST")
     exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
     t = alert_coins(coin_ids, coin_symbols, True)
-    sleep(140)
+    sleep(1400)
     print("here")
     close_all_threads(t)
     print("done")
