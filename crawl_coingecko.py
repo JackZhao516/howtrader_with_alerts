@@ -119,7 +119,7 @@ class CoinGecKo:
                       f"{exchange}-{time_frame}-{start_time_now_str}.zip"
             response = requests.get(url, timeout=1000, verify=False)
             response_now = requests.get(url_now, timeout=1000, verify=False)
-            # print(f"{exchange} {time_frame} {response.status_code} {response_now.status_code}")
+            print(f"{exchange} {time_frame} {response.status_code} {response_now.status_code}")
 
             if response.status_code != 200 or response_now.status_code != 200:
                 self.popular_exchanges_lock.acquire()
