@@ -93,7 +93,10 @@ class CoinGecKoAlert(CoinGecKo):
         self.list_12h = np.zeros(180, dtype=np.float64)
         price.reverse()
         counter = 0
+        print(len(price))
         for i in range(0, len(price), 12):
+            if i == 180:
+                break
             self.list_12h[counter] = price[i][1]
             counter += 1
             # self.current_time_12h = price[i][0]
@@ -117,6 +120,8 @@ class CoinGecKoAlert(CoinGecKo):
         price.reverse()
         counter = 0
         for i in range(0, min(len(price), 800), 4):
+            if i == 200:
+                break
             self.list_4h[counter] = price[i][1]
             counter += 1
 
@@ -140,6 +145,8 @@ class CoinGecKoAlert(CoinGecKo):
         price.reverse()
         counter = 0
         for i in range(0, min(len(price), 400), 4):
+            if i == 100:
+                break
             self.list_4h_500[counter] = price[i][1]
             counter += 1
 
@@ -163,6 +170,8 @@ class CoinGecKoAlert(CoinGecKo):
         price.reverse()
         counter = 0
         for i in range(0, len(price), 24):
+            if i == 90:
+                break
             self.list_1d[counter] = price[i][1]
             counter += 1
 
