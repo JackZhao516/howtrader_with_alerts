@@ -48,9 +48,7 @@ class BinanceIndicatorAlert:
 
         self.last_close_1m = {exchange: 0.0 for exchange in exchanges}
 
-        # TODO for testing
         self.tg_bot = TelegramBot(alert_type)
-        # self.tg_bot = TelegramBot("TEST")
 
         self.run()
 
@@ -266,10 +264,12 @@ class BinanceIndicatorAlert:
         timeframe_str = f"H{timeframe}" if timeframe != "24" else "D1"
 
         if close > current_ma > self.last_close_1m[exchange]:
-            self.tg_bot.safe_send_message(f"{exchange}_{self.mode} spot crossover {timeframe_str} ma{self.window}")
+            self.tg_bot.safe_send_message(f"{self.mode}_{exchange.upper()} spot: {close}"
+                                          f" crossover {timeframe_str} ma{self.window}: {current_ma}")
             logging.warning(f"{exchange}_{self.mode} ma {current_ma}, close {close}")
         elif close < current_ma < self.last_close_1m[exchange]:
-            self.tg_bot.safe_send_message(f"{exchange}_{self.mode} spot crossunder {timeframe_str} ma{self.window}")
+            self.tg_bot.safe_send_message(f"{self.mode}_{exchange.upper()} spot: {close}"
+                                          f" crossunder {timeframe_str} ma{self.window}: {current_ma}")
             logging.warning(f"{exchange}_{self.mode} ma {current_ma}, close {close}")
 
 
