@@ -300,18 +300,20 @@ class CoinGecKoAlert(CoinGecKo):
 def alert_coins(coin_ids, coin_symbols, alert_type="alert_100", tg_type="CG_ALERT"):
     logging.info(f"alert_coins coingecko init start")
     coins = {}
+    coin_ids_without_stable = []
 
     # init coins
     for i, coin_id in enumerate(coin_ids):
         coin_symbol = coin_symbols[i]
         if coin_symbol in STABLE_COINS:
             continue
+        coin_ids_without_stable.append(coin_id)
         coins[coin_id] = CoinGecKoAlert(coin_id, coin_symbol, alert_type, tg_type)
         coins[coin_id].alert_spot_init()
 
     # update coins
     logging.info(f"alert_coins coingecko update start")
-    t = threading.Thread(target=loop_alert_helper, args=(coins, coin_ids))
+    t = threading.Thread(target=loop_alert_helper, args=(coins, coin_ids_without_stable))
     t.start()
     return t
 
@@ -362,7 +364,7 @@ if __name__ == '__main__':
     cg = CoinGecKo("TEST")
     exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
     print(coin_ids, coin_symbols)
-    # t = alert_coins(["bitcoin"], ["BTC"], True, "TEST")
+    t = alert_coins(coin_ids, coin_symbols, "alert_100", "TEST")
     # sleep(1800)
     # print("here")
     # close_all_threads(t)

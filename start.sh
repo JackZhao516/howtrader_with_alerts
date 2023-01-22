@@ -5,7 +5,7 @@ do
     DATE=`date | cut -d' ' -f4`
     DATE1=`date | cut -d' ' -f5`
 
-    if [[ $DATE == "21:39:00" || $DATE1 == "21:39:00" ]]
+    if [[ $DATE == "22:05:00" || $DATE1 == "22:05:00" ]]
     then
 #        conda activate mytrader
         rm -rf "$1.log"
