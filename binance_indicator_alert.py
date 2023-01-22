@@ -12,8 +12,6 @@ from telegram_api import TelegramBot
 from binance.lib.utils import config_logging
 from binance.websocket.spot.websocket_client import SpotWebsocketClient as Client
 
-# TODO: find new coins in binance, find all available 1min, 4h, 12h
-
 
 class BinanceIndicatorAlert:
     """
@@ -22,33 +20,40 @@ class BinanceIndicatorAlert:
     DATA_DOWNLOAD_ROOT_URL = "https://data.binance.vision/data/spot/daily/klines/"
     HTTP_URL = "https://api.binance.com/api/v3/klines?"
     MAX_ERROR = 5
+    STABLE_EXCHANGES = {"wbtcbtc"}
     config_logging(logging, logging.INFO)
 
-    def __init__(self, exchanges, mode="100", execution_time=86400 * 7, alert_type="CG_ALERT"):
+    def __init__(self, exchanges, alert_type="alert_100", execution_time=86400 * 7, tg_type="CG_ALERT"):
         exchanges = [exchange.lower() for exchange in exchanges]
         exchanges.sort()
 
         # self.id_count = id_count
         self.exchanges = exchanges
         self.exchanges_set = set(exchanges)
-        self.mode = mode
+        self.alert_type = alert_type
         self.execution_time = execution_time
-        self.window = 200
+        self.window = 100 if self.alert_type == "alert_500" else 200
 
         # all mappings use lower case of exchange name
         self.close = {}
         self.close_lock = threading.Lock()
 
-        if mode == "100":
+        if self.alert_type == "alert_100":
             self.close = {exchange: {
                 "4": np.zeros(self.window),
                 "12": np.zeros(self.window),
                 } for exchange in exchanges
             }
+        elif self.alert_type == "alert_500":
+            self.close = {exchange: {
+                "4": np.zeros(self.window),
+                "24": np.zeros(self.window),
+                } for exchange in exchanges
+            }
 
         self.last_close_1m = {exchange: 0.0 for exchange in exchanges}
 
-        self.tg_bot = TelegramBot(alert_type)
+        self.tg_bot = TelegramBot(tg_type)
 
         self.run()
 
@@ -178,7 +183,7 @@ class BinanceIndicatorAlert:
         """
         threads = []
         for exchange in self.exchanges:
-            if exchange == "USDCUSDT":
+            if exchange in self.STABLE_EXCHANGES:
                 continue
             t = threading.Thread(target=self.download_past_klines, args=(time_frame, exchange))
             threads.append(t)
@@ -191,9 +196,12 @@ class BinanceIndicatorAlert:
         """
         Run websocket
         """
-        if self.mode == "100":
+        if self.alert_type == "alert_100":
             self.download_past_klines_threads(4)
             self.download_past_klines_threads(12)
+        elif self.alert_type == "alert_500":
+            self.download_past_klines_threads(4)
+            self.download_past_klines_threads(24)
 
         id_count = 0
         client = Client()
@@ -204,16 +212,21 @@ class BinanceIndicatorAlert:
         id_count += 1
         sleep(5)
 
-        if self.mode == "100":
+        if self.alert_type == "alert_100" or self.alert_type == "alert_500":
             client.kline(
                 symbol=self.exchanges, id=id_count, interval="4h", callback=self.update_ma_4h
             )
             id_count += 1
             sleep(5)
 
-            client.kline(
-                symbol=self.exchanges, id=id_count, interval="12h", callback=self.update_ma_12h
-            )
+            if self.alert_type == "alert_100":
+                client.kline(
+                    symbol=self.exchanges, id=id_count, interval="12h", callback=self.update_ma_12h
+                )
+            else:
+                client.kline(
+                    symbol=self.exchanges, id=id_count, interval="24h", callback=self.update_ma_24h
+                )
 
         sleep(self.execution_time)
         client.stop()
@@ -252,8 +265,12 @@ class BinanceIndicatorAlert:
                 self.last_close_1m[exchange] = close
                 self.close_lock.release()
                 return
-            self.alert_helper_1m(close, 4, exchange)
-            self.alert_helper_1m(close, 12, exchange)
+            if self.alert_type == "alert_100":
+                self.alert_helper_1m(close, 4, exchange)
+                self.alert_helper_1m(close, 12, exchange)
+            elif self.alert_type == "alert_500":
+                self.alert_helper_1m(close, 4, exchange)
+                self.alert_helper_1m(close, 24, exchange)
             self.last_close_1m[exchange] = close
             # logging.warning(f"{exchange} 1m current {self.last_close_1m[exchange]}")
             self.close_lock.release()
@@ -262,17 +279,18 @@ class BinanceIndicatorAlert:
         timeframe = str(timeframe)
         current_ma = np.mean(self.close[exchange][timeframe])
         timeframe_str = f"H{timeframe}" if timeframe != "24" else "D1"
+        mode = self.alert_type.split("_")[1]
 
         if close > current_ma > self.last_close_1m[exchange]:
-            self.tg_bot.safe_send_message(f"{self.mode}_{exchange.upper()} spot: {close}"
+            self.tg_bot.safe_send_message(f"{mode}_{exchange.upper()} spot: {close}"
                                           f" crossover {timeframe_str} ma{self.window}: {current_ma}")
-            logging.warning(f"{exchange}_{self.mode} ma {current_ma}, close {close}")
+            logging.warning(f"{exchange}_{mode} ma {current_ma}, close {close}")
         elif close < current_ma < self.last_close_1m[exchange]:
-            self.tg_bot.safe_send_message(f"{self.mode}_{exchange.upper()} spot: {close}"
+            self.tg_bot.safe_send_message(f"{mode}_{exchange.upper()} spot: {close}"
                                           f" crossunder {timeframe_str} ma{self.window}: {current_ma}")
-            logging.warning(f"{exchange}_{self.mode} ma {current_ma}, close {close}")
+            logging.warning(f"{exchange}_{mode} ma {current_ma}, close {close}")
 
 
 if __name__ == "__main__":
-    alert = BinanceIndicatorAlert(["BTCUSDT", "ETHUSDT"], "100")
+    alert = BinanceIndicatorAlert(["BTCUSDT", "ETHUSDT"], "500", tg_type="TEST")
     # alert.download_past_klines(12)

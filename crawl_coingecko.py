@@ -46,10 +46,13 @@ class CoinGecKo:
 
         for i, coin in enumerate(market_list):
             symbol, coin_id = coin
-            if f"{symbol}USDT" not in exchanges and f"{symbol}BTC" not in exchanges and f"{symbol}ETH" not in exchanges:
+            if f"{symbol}USDT" not in exchanges and f"{symbol}BTC" not in exchanges \
+                    and f"{symbol}ETH" not in exchanges and f"{symbol}BUSD" not in exchanges:
                 coingeco_coins.append(coin_id)
                 coingeco_names.append(symbol)
             else:
+                if f"{symbol}BUSD" in exchanges:
+                    res.append(f"{symbol}BUSD")
                 if f"{symbol}USDT" in exchanges:
                     res.append(f"{symbol}USDT")
                 if f"{symbol}BTC" in exchanges:
@@ -187,13 +190,16 @@ class CoinGecKo:
         coingeco_coins, coingeco_names, ex = [], [], []
 
         for volume_increase, symbol, coin_id in res:
-            if f"{symbol}USDT" not in exchanges and f"{symbol}BTC" not in exchanges and f"{symbol}ETH" not in exchanges:
+            if f"{symbol}USDT" not in exchanges and f"{symbol}BTC" not in exchanges\
+                    and f"{symbol}ETH" not in exchanges and f"{symbol}BUSD" not in exchanges:
                 coingeco_coins.append(coin_id)
                 coingeco_names.append(symbol)
             else:
                 if f"{symbol}USDT" in exchanges:
                     ex.append(f"{symbol}USDT")
                 if not usdt_only:
+                    if f"{symbol}BUSD" in exchanges:
+                        ex.append(f"{symbol}BUSD")
                     if f"{symbol}BTC" in exchanges:
                         ex.append(f"{symbol}BTC")
                     if f"{symbol}ETH" in exchanges:
@@ -224,4 +230,5 @@ if __name__ == '__main__':
     #     if c in exchanges:
     #         print(c)
 
-    coin.get_500_usdt_exchanges(market_cap=False)
+    ex, c, _ = coin.get_coins_with_weekly_volume_increase(volume_threshold=1.3)
+    print(len(ex), len(c))

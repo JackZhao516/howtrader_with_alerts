@@ -8,7 +8,7 @@ from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
 from binance.lib.utils import config_logging
 
-STABLE_COINS = {"USDT", "USDC", "DAI", "BUSD", "USDP", "GUSD", "TUSD", "FRAX"}
+STABLE_COINS = {"USDT", "USDC", "DAI", "BUSD", "USDP", "GUSD", "TUSD", "FRAX", "CUSD"}
 class CoinGecKo12H(CoinGecKo):
     def __init__(self, coin_id, alert_type="CG_ALERT"):
         super().__init__(alert_type)
@@ -47,7 +47,7 @@ class CoinGecKo12H(CoinGecKo):
 running = True
 config_logging(logging, logging.INFO)
 class CoinGecKoAlert(CoinGecKo):
-    def __init__(self, coin_id, symbol, alert_100=True, alert_type="CG_ALERT"):
+    def __init__(self, coin_id, symbol, alert_type="alert_100", tg_type="CG_ALERT"):
         super().__init__("TEST")
         self.coin_id = coin_id
         self.symbol = symbol
@@ -55,7 +55,7 @@ class CoinGecKoAlert(CoinGecKo):
         self.less_34_days = False
         self.less_17_days = False
 
-        self.tg_bot = TelegramBot(alert_type, True)
+        self.tg_bot = TelegramBot(tg_type, True)
 
         self.counter_12h = 0
         self.list_12h = None
@@ -84,7 +84,7 @@ class CoinGecKoAlert(CoinGecKo):
         self.minute_counter_1d = 1
 
         # indicate whether for 100 or 500
-        self.alert_100 = alert_100
+        self.alert_type = alert_type
 
     def h12_init(self):
         # try:
@@ -267,7 +267,7 @@ class CoinGecKoAlert(CoinGecKo):
         # print(f"{self.symbol} spot: {str(price)} D1: {str(self.ma_1d)} H4 ma100: {str(self.ma_4h_500)}")
 
     def alert_spot_init(self):
-        if self.alert_100:
+        if self.alert_type == "alert_100":
             self.h12_init()
             self.h4_init()
             logging.info(f"100_{self.symbol} coingecko init done")
@@ -282,7 +282,7 @@ class CoinGecKoAlert(CoinGecKo):
             threading.Thread(target=self.minute_update_100,
                              args=(price, self.minute_counter_12h % 720 == 0,
                                    self.minute_counter_4h % 240 == 0)) \
-            if self.alert_100 \
+            if self.alert_type == "alert_100" \
             else threading.Thread(target=self.minute_update_500,
                                   args=(price, self.minute_counter_1d % 1440 == 0,
                                         self.minute_counter_4h % 240 == 0))
@@ -297,7 +297,7 @@ class CoinGecKoAlert(CoinGecKo):
         return self.last_update_thread
 
 
-def alert_coins(coin_ids, coin_symbols, alert_100=True, alert_type="CG_ALERT"):
+def alert_coins(coin_ids, coin_symbols, alert_type="alert_100", tg_type="CG_ALERT"):
     logging.info(f"alert_coins coingecko init start")
     coins = {}
 
@@ -306,7 +306,7 @@ def alert_coins(coin_ids, coin_symbols, alert_100=True, alert_type="CG_ALERT"):
         coin_symbol = coin_symbols[i]
         if coin_symbol in STABLE_COINS:
             continue
-        coins[coin_id] = CoinGecKoAlert(coin_id, coin_symbol, alert_100, alert_type)
+        coins[coin_id] = CoinGecKoAlert(coin_id, coin_symbol, alert_type, tg_type)
         coins[coin_id].alert_spot_init()
 
     # update coins

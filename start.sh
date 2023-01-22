@@ -8,8 +8,8 @@ do
     if [[ $DATE == "17:45:00" || $DATE1 == "17:45:00" ]]
     then
 #        conda activate mytrader
-        rm -rf alert_100.log
-        nohup python3 alert_system.py alert_100 > alert_100.log 2>&1 &
+        rm -rf "$1.log"
+        nohup python3 alert_system.py "$1" > "$1.log" 2>&1 &
 
         echo "start"
         sleep 1s
