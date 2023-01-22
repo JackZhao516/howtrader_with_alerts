@@ -24,7 +24,7 @@ class BinanceIndicatorAlert:
     MAX_ERROR = 5
     config_logging(logging, logging.INFO)
 
-    def __init__(self, exchanges, mode="100", execution_time=86400 * 7):
+    def __init__(self, exchanges, mode="100", execution_time=86400 * 7, alert_type="CG_ALERT"):
         exchanges = [exchange.lower() for exchange in exchanges]
         exchanges.sort()
 
@@ -49,7 +49,7 @@ class BinanceIndicatorAlert:
         self.last_close_1m = {exchange: 0.0 for exchange in exchanges}
 
         # TODO for testing
-        self.tg_bot = TelegramBot("CG_ALERT")
+        self.tg_bot = TelegramBot(alert_type)
         # self.tg_bot = TelegramBot("TEST")
 
         self.run()

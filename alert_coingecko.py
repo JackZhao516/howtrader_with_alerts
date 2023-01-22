@@ -97,7 +97,7 @@ class CoinGecKoAlert(CoinGecKo):
         counter = 0
         print(len(price))
         for i in range(0, len(price), 12):
-            if i == 180:
+            if i == 2160:
                 break
             self.list_12h[counter] = price[i][1]
             counter += 1
@@ -106,7 +106,7 @@ class CoinGecKoAlert(CoinGecKo):
         self.counter_12h = len(price) // 12
         self.ma_12h = np.sum(self.list_12h)/self.counter_12h
         self.spot_over_ma_12h = price[0][1] > self.ma_12h
-        # print(f"h12 init: {self.coin_id}, ma_12h: {self.ma_12h}, spot_over_ma_12h: {self.spot_over_ma_12h}")
+        # print(f"h12 init: {self.coin_id}, ma_12h: {self.ma_12h}, list_12h{self.list_12h}, spot_over_ma_12h: {self.spot_over_ma_12h}")
         # except Exception as e:
         #     sleep(60)
         #     self.h12_init()
@@ -122,7 +122,7 @@ class CoinGecKoAlert(CoinGecKo):
         price.reverse()
         counter = 0
         for i in range(0, min(len(price), 800), 4):
-            if i == 200:
+            if i == 800:
                 break
             self.list_4h[counter] = price[i][1]
             counter += 1
@@ -130,7 +130,7 @@ class CoinGecKoAlert(CoinGecKo):
         self.counter_4h = min(len(price), 800) // 4
         self.ma_4h = np.sum(self.list_4h)/self.counter_4h
         self.spot_over_ma_4h = price[0][1] > self.ma_4h
-        # print(f"h4 init: {self.coin_id}, ma_4h: {self.ma_4h}, spot_over_ma_4h: {self.spot_over_ma_4h}")
+        # print(f"h4 init: {self.coin_id}, ma_4h: {self.ma_4h}, list_4h: {self.list_4h},spot_over_ma_4h: {self.spot_over_ma_4h}")
         # except Exception as e:
         #     print("h4 init error")
         #     sleep(60)
@@ -147,7 +147,7 @@ class CoinGecKoAlert(CoinGecKo):
         price.reverse()
         counter = 0
         for i in range(0, min(len(price), 400), 4):
-            if i == 100:
+            if i == 400:
                 break
             self.list_4h_500[counter] = price[i][1]
             counter += 1
@@ -172,7 +172,7 @@ class CoinGecKoAlert(CoinGecKo):
         price.reverse()
         counter = 0
         for i in range(0, len(price), 24):
-            if i == 90:
+            if i == 2160:
                 break
             self.list_1d[counter] = price[i][1]
             counter += 1
@@ -223,6 +223,7 @@ class CoinGecKoAlert(CoinGecKo):
                 f"100_{self.symbol} spot: {str(price)} crossover H4 ma200: {str(self.ma_4h)}")
             self.spot_over_ma_4h = True
 
+        # logging.info(f"100_{self.symbol} spot: {str(price)} ma180: {str(self.ma_12h)} ma200: {str(self.ma_4h)}")
         # self.tg_bot.safe_send_message(f"{self.symbol} spot: {str(price)} H12 ma180: {str(self.ma_12h)} H4 ma200: {str(self.ma_4h)}, _____{time.time()}")
         # add_msg_to_queue(f"{self.symbol} spot: {str(price)} H4 ma200: {str(self.ma_4h)}, _____{time.time()}")
 
@@ -345,7 +346,6 @@ def loop_alert_helper(coins, coin_ids):
         coin_item.tg_bot.stop()
 
 
-
 def close_all_threads(thread):
     global running
     running = False
@@ -357,9 +357,10 @@ if __name__ == '__main__':
 
     from crawl_coingecko import CoinGecKo
     cg = CoinGecKo("TEST")
-    exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
-    t = alert_coins(coin_ids, coin_symbols, True)
-    sleep(1400)
+    # exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
+    # print(coin_ids, coin_symbols)
+    t = alert_coins(["bitcoin"], ["BTC"], True, "TEST")
+    sleep(1800)
     print("here")
     close_all_threads(t)
     print("done")
