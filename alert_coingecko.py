@@ -8,6 +8,7 @@ from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
 from binance.lib.utils import config_logging
 
+STABLE_COINS = {"USDT", "USDC", "DAI", "BUSD", "USDP", "GUSD", "TUSD", "FRAX"}
 class CoinGecKo12H(CoinGecKo):
     def __init__(self, coin_id, alert_type="CG_ALERT"):
         super().__init__(alert_type)
@@ -303,6 +304,8 @@ def alert_coins(coin_ids, coin_symbols, alert_100=True, alert_type="CG_ALERT"):
     # init coins
     for i, coin_id in enumerate(coin_ids):
         coin_symbol = coin_symbols[i]
+        if coin_symbol in STABLE_COINS:
+            continue
         coins[coin_id] = CoinGecKoAlert(coin_id, coin_symbol, alert_100, alert_type)
         coins[coin_id].alert_spot_init()
 
@@ -357,13 +360,13 @@ if __name__ == '__main__':
 
     from crawl_coingecko import CoinGecKo
     cg = CoinGecKo("TEST")
-    # exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
-    # print(coin_ids, coin_symbols)
-    t = alert_coins(["bitcoin"], ["BTC"], True, "TEST")
-    sleep(1800)
-    print("here")
-    close_all_threads(t)
-    print("done")
+    exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
+    print(coin_ids, coin_symbols)
+    # t = alert_coins(["bitcoin"], ["BTC"], True, "TEST")
+    # sleep(1800)
+    # print("here")
+    # close_all_threads(t)
+    # print("done")
     # from pycoingecko import CoinGeckoAPI
     # cg = CoinGeckoAPI(api_key="CG-wAukVxNxrR322gkZYEgZWtV1")
     # price = cg.get_price(ids="bitcoin", vs_currencies='usd', include_last_updated_at=True,
