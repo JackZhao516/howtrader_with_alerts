@@ -8,7 +8,7 @@ from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
 from binance.lib.utils import config_logging
 
-STABLE_COINS = {"USDT", "USDC", "DAI", "BUSD", "USDP", "GUSD", "TUSD", "FRAX", "CUSD"}
+STABLE_COINS = {"USDT", "USDC", "DAI", "BUSD", "USDP", "GUSD", "TUSD", "FRAX", "CUSD", "USDD"}
 class CoinGecKo12H(CoinGecKo):
     def __init__(self, coin_id, alert_type="CG_ALERT"):
         super().__init__(alert_type)
