@@ -8,7 +8,11 @@ from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
 from binance.lib.utils import config_logging
 
-STABLE_COINS = {"USDT", "USDC", "DAI", "BUSD", "USDP", "GUSD", "TUSD", "FRAX", "CUSD", "USDD"}
+STABLE_COINS = {"USDT", "USDC", "DAI", "BUSD", "USDP", "GUSD",
+                "TUSD", "FRAX", "CUSD", "USDD", "DEI", "USDK",
+                "MIMATIC", "OUSD", "PAX", "FEI", "USTC", "USDN",
+                "TRIBE", "LUSD", "EURS", "VUSDC", "USDX", "SUSD",
+                "VAI", "RSV", "CEUR", "USDS", "CUSDT"}
 class CoinGecKo12H(CoinGecKo):
     def __init__(self, coin_id, alert_type="CG_ALERT"):
         super().__init__(alert_type)
@@ -270,11 +274,10 @@ class CoinGecKoAlert(CoinGecKo):
         if self.alert_type == "alert_100":
             self.h12_init()
             self.h4_init()
-            logging.info(f"100_{self.symbol} coingecko init done")
         else:
             self.d1_init()
             self.h4_500_init()
-
+        logging.info(f"{self.alert_type}_{self.symbol} coingecko init done")
     def minute_update(self, price):
         if self.last_update_thread:
             self.last_update_thread.join()
