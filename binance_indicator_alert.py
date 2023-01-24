@@ -6,11 +6,14 @@ import glob
 import csv
 import logging
 import threading
-import numpy as np
 from time import sleep
-from telegram_api import TelegramBot
+
+import numpy as np
 from binance.lib.utils import config_logging
 from binance.websocket.spot.websocket_client import SpotWebsocketClient as Client
+
+from telegram_api import TelegramBot
+from utility import update_coins_exchanges_txt_300
 
 
 class BinanceIndicatorAlert:
@@ -62,8 +65,6 @@ class BinanceIndicatorAlert:
         self.last_close_1m = {exchange: 0.0 for exchange in exchanges}
 
         self.tg_bot = TelegramBot(tg_type)
-
-        self.run()
 
     def download_past_klines(self, time_frame, exchange):
         """
@@ -245,21 +246,7 @@ class BinanceIndicatorAlert:
         client.stop()
 
         if self.alert_type == "alert_300":
-            # if past files, then compare
-            if os.path.exists("300_exchange.txt"):
-                with open("300_exchange.txt", "r") as f:
-                    past_exchanges = set(f.read().strip().split("\n"))
-                newly_deleted = list(past_exchanges - self.spot_over_h12_300)
-                newly_added = list(self.spot_over_h12_300 - past_exchanges)
-
-                with open("300_exchange.txt", "w") as f:
-                    f.write("\n".join(self.spot_over_h12_300))
-                return self.spot_over_h12_300, newly_deleted, newly_added
-            else:
-                with open("300_exchange.txt", "w") as f:
-                    f.write("\n".join(self.spot_over_h12_300))
-                return self.spot_over_h12_300, [], []
-
+            return update_coins_exchanges_txt_300(self.spot_over_h12_300, "exchanges")
 
     def update_ma_4h(self, msg):
         if "stream" not in msg or "data" not in msg or "k" not in msg["data"]:

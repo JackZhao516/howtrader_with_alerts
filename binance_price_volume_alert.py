@@ -3,8 +3,10 @@ import math
 import logging
 import threading
 from collections import defaultdict
+
 from binance.lib.utils import config_logging
 from binance.websocket.spot.websocket_client import SpotWebsocketClient as Client
+
 from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
 

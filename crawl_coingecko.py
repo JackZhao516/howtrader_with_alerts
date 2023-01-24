@@ -1,21 +1,22 @@
-from time import sleep
 import logging
-from telegram_api import TelegramBot
 import requests
-import numpy as np
-from pycoingecko import CoinGeckoAPI
 import datetime
 import threading
+
 import urllib3
+import numpy as np
+from pycoingecko import CoinGeckoAPI
+
+from telegram_api import TelegramBot
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 class CoinGecKo:
     COINGECKO_API_KEY = "CG-wAukVxNxrR322gkZYEgZWtV1"
     DATA_DOWNLOAD_ROOT_URL = "https://data.binance.vision/data/spot/daily/klines/"
 
-    def __init__(self, alert_type="TEST"):
+    def __init__(self, tg_type="TEST"):
         self.cg = CoinGeckoAPI(api_key=self.COINGECKO_API_KEY)
-        self.tg_bot = TelegramBot(alert_type=alert_type)
+        self.tg_bot = TelegramBot(alert_type=tg_type)
         self.popular_exchanges = None
         self.popular_exchanges_lock = threading.Lock()
 

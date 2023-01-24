@@ -1,50 +1,62 @@
 import time
 from time import sleep
-import numpy as np
 import threading
 import logging
-from collections import defaultdict
+
+import numpy as np
+from binance.lib.utils import config_logging
+
 from crawl_coingecko import CoinGecKo
 from telegram_api import TelegramBot
-from binance.lib.utils import config_logging
+from utility import update_coins_exchanges_txt_300
 
 STABLE_COINS = {"USDT", "USDC", "DAI", "BUSD", "USDP", "GUSD",
                 "TUSD", "FRAX", "CUSD", "USDD", "DEI", "USDK",
                 "MIMATIC", "OUSD", "PAX", "FEI", "USTC", "USDN",
                 "TRIBE", "LUSD", "EURS", "VUSDC", "USDX", "SUSD",
                 "VAI", "RSV", "CEUR", "USDS", "CUSDT"}
-class CoinGecKo12H(CoinGecKo):
-    def __init__(self, coin_id, alert_type="CG_ALERT"):
-        super().__init__(alert_type)
-        self.coin_id = coin_id
-        self.less_90_days = False
-        self.ma_180 = self.h12_sma_180()
 
-    def h12_sma_180(self):
+
+class CoinGecKo12H(CoinGecKo):
+    def __init__(self, coin_ids, coin_symbols, tg_type="CG_ALERT"):
+        super().__init__(tg_type)
+        self.coin_ids = coin_ids
+        self.coin_symbols = coin_symbols
+        self.spot_over_h12_300 = set()
+
+    def h12_sma_180(self, coin_id, coin_symbol):
         try:
-            price = self.cg.get_coin_market_chart_by_id(id=self.coin_id, vs_currency='usd', days=90)
+            price = self.cg.get_coin_market_chart_by_id(id=coin_id, vs_currency='usd', days=90)
             price = price['prices']
-            if len(price) < 2150:
-                self.less_90_days = True
             price = [i[1] for i in price]
             res = 0
             counter = 0
             for i in range(0, len(price), 12):
-                res += price[i]
+                if i == 2160:
+                    break
+                res += float(price[i])
                 counter += 1
-            return res / counter
-        except Exception as e:
-            return 1000000
+            sma = res / counter
+            price = self.cg.get_coin_market_chart_by_id(id=coin_id, vs_currency='usd', days=1)
+            price = float(price['prices'][-1][1])
 
-    def alert_spot(self):
-        try:
-            price = self.cg.get_coin_market_chart_by_id(id=self.coin_id, vs_currency='usd', days=1)
-            price = price['prices'][-1][1]
-            # price = Decimal(price)
-            print(f"coin_id: {self.coin_id}, price: {price}, ma_180: {self.ma_180}, {price > self.ma_180}, new_coin: {self.less_90_days}")
-            return price > self.ma_180
+            logging.warning(f"{coin_symbol}: {price}, {sma}")
+            if price > sma:
+                self.spot_over_h12_300.add(coin_symbol)
+                return True
+
         except Exception as e:
             return False
+
+    def run(self):
+        for coin_id, coin_symbol in zip(self.coin_ids, self.coin_symbols):
+            coin_symbol = coin_symbol.upper()
+            if coin_symbol in STABLE_COINS:
+                continue
+            self.h12_sma_180(coin_id, coin_symbol)
+        logging.warning(f"spot_over_h12_300: {self.spot_over_h12_300}")
+
+        return update_coins_exchanges_txt_300(self.spot_over_h12_300, "coins")
 
 
 ############################################################################################################
