@@ -44,3 +44,5 @@ coins_with_weekly_volume_increase.txt
 300/
 300_cache/
 tmp/
+
+*.log
