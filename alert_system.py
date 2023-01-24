@@ -6,8 +6,9 @@ from alert_coingecko import CoinGecKo12H, alert_coins, close_all_threads
 from telegram_api import TelegramBot
 from binance_indicator_alert import BinanceIndicatorAlert
 
-tg_bot = TelegramBot("CG_SUM")
-cg = CoinGecKo("CG_SUM")
+MODE = "TEST"
+tg_bot = TelegramBot(MODE)
+cg = CoinGecKo(MODE)
 #
 # usdt_gateway_setting = {
 #         "key": "ZaipNokA3CkFb0fQsp7D2mqmev9RAHPrgW0SnUXVhReXfgTujN7SJB0Wu4atl20M",
