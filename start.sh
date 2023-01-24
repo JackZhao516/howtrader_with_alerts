@@ -5,14 +5,14 @@ do
     DATE=`date | cut -d' ' -f4`
     DATE1=`date | cut -d' ' -f5`
 
-    if [[ $DATE == "03:26:00" || $DATE1 == "03:26:00" ]]
+    if [[ $DATE == "02:45:00" || $DATE1 == "02:45:00" ]]
     then
 #        conda activate mytrader
         rm -rf "$1.log"
         nohup python3 alert_system.py "$1" > "$1.log" 2>&1 &
 
         echo "start"
-        sleep 1s
+        sleep 259000s
     fi
 done
 

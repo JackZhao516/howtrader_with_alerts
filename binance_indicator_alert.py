@@ -50,6 +50,14 @@ class BinanceIndicatorAlert:
                 "24": np.zeros(self.window),
                 } for exchange in exchanges
             }
+        else:
+            self.close = {exchange: {
+                "12": np.zeros(self.window),
+                } for exchange in exchanges
+            }
+
+        # for calculating spot over h12 exchanges
+        self.spot_over_h12_300 = set()
 
         self.last_close_1m = {exchange: 0.0 for exchange in exchanges}
 
@@ -202,6 +210,8 @@ class BinanceIndicatorAlert:
         elif self.alert_type == "alert_500":
             self.download_past_klines_threads(4)
             self.download_past_klines_threads(24)
+        else:
+            self.download_past_klines_threads(12)
 
         id_count = 0
         client = Client()
@@ -228,8 +238,28 @@ class BinanceIndicatorAlert:
                     symbol=self.exchanges, id=id_count, interval="24h", callback=self.update_ma_24h
                 )
 
-        sleep(self.execution_time)
+        if self.alert_type == "alert_300":
+            sleep(140)
+        else:
+            sleep(self.execution_time)
         client.stop()
+
+        if self.alert_type == "alert_300":
+            # if past files, then compare
+            if os.path.exists("300_exchange.txt"):
+                with open("300_exchange.txt", "r") as f:
+                    past_exchanges = set(f.read().strip().split("\n"))
+                newly_deleted = list(past_exchanges - self.spot_over_h12_300)
+                newly_added = list(self.spot_over_h12_300 - past_exchanges)
+
+                with open("300_exchange.txt", "w") as f:
+                    f.write("\n".join(self.spot_over_h12_300))
+                return self.spot_over_h12_300, newly_deleted, newly_added
+            else:
+                with open("300_exchange.txt", "w") as f:
+                    f.write("\n".join(self.spot_over_h12_300))
+                return self.spot_over_h12_300, [], []
+
 
     def update_ma_4h(self, msg):
         if "stream" not in msg or "data" not in msg or "k" not in msg["data"]:
@@ -261,6 +291,15 @@ class BinanceIndicatorAlert:
             exchange = msg["s"].lower()
             close = float(msg["k"]["c"])
             self.close_lock.acquire()
+            if self.alert_type == "alert_300":
+                if close > np.mean(self.close[exchange]["12"]):
+                    self.spot_over_h12_300.add(exchange.upper())
+                else:
+                    if exchange.upper() in self.spot_over_h12_300:
+                        self.spot_over_h12_300.remove(exchange.upper())
+                self.close_lock.release()
+                return
+
             if self.last_close_1m[exchange] == 0.0:
                 self.last_close_1m[exchange] = close
                 self.close_lock.release()

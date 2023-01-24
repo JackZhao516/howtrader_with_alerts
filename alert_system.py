@@ -4,15 +4,11 @@ from time import sleep
 from datetime import datetime, time
 import threading
 import logging
-from logging import INFO
 
-from howtrader.event import EventEngine
 from howtrader.trader.setting import SETTINGS
-from howtrader.trader.engine import MainEngine, LogEngine
+from howtrader.trader.engine import MainEngine
 
-from howtrader.gateway.binance import BinanceSpotGateway, BinanceUsdtGateway
-from howtrader.app.cta_strategy import CtaStrategyApp, CtaEngine
-from howtrader.app.cta_strategy.base import EVENT_CTA_LOG
+from howtrader.app.cta_strategy import CtaEngine
 from crawl_coingecko import CoinGecKo
 from alert_coingecko import CoinGecKo12H, alert_coins, close_all_threads
 from telegram_api import TelegramBot
@@ -30,24 +26,6 @@ usdt_gateway_setting = {
 
 
 def alert_indicator(alert_type="alert_100"):
-    # while True:
-    #     setting = {}
-    #     exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
-    #     # coins_thread = alert_coins(coin_ids, coin_symbols, True)
-    #
-    #     for exchange in exchanges:
-    #         cta_engine.add_strategy("Strategy4h12h", f"100_{exchange}_4h12h", f"{exchange.lower()}.BINANCE", setting)
-    #
-    #     cta_engine.init_all_strategies()
-    #     main_engine.write_log(cta_engine.print_strategy())
-    #     sleep(80 * len(exchanges))  # Leave enough time to complete strategy initialization
-    #     cta_engine.start_all_strategies()
-    #     main_engine.write_log("start cta strategies")
-    #     sleep(60 * 60 * 24 * 3) # 3 days
-    #     cta_engine.close()
-    #     # close_all_threads(coins_thread)
-    #     sleep(5)
-    #     main_engine.write_log("re-run alert_100")
     logging.info(f"{alert_type} start")
     if alert_type == "alert_100":
         exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
@@ -96,27 +74,6 @@ def alert_300(cta_engine: CtaEngine, main_engine: MainEngine):
         cta_engine.close()
         sleep(60 * 60 * 24 * 2)  # 2 days
         main_engine.write_log("re-run alert_300")
-
-
-# def alert_500(cta_engine: CtaEngine, main_engine: MainEngine):
-#     while True:
-#         setting = {}
-#         exchanges, coin_ids, coin_symbols = cg.get_coins_with_weekly_volume_increase()
-#         coins_thread = alert_coins(coin_ids, coin_symbols, False)
-#
-#         for exchange in exchanges:
-#             cta_engine.add_strategy("Strategy4h1d", f"500_{exchange}_4h1d", f"{exchange.lower()}.BINANCE", setting)
-#
-#         cta_engine.init_all_strategies()
-#         main_engine.write_log(cta_engine.print_strategy())
-#         sleep(70 * len(exchanges))  # Leave enough time to complete strategy initialization
-#         cta_engine.start_all_strategies()
-#         main_engine.write_log("start cta strategies")
-#         sleep(60 * 60 * 24 * 3)  # 7 days
-#         cta_engine.close()
-#         close_all_threads(coins_thread)
-#         sleep(5)
-#         main_engine.write_log("re-run alert_500")
 
 
 def get_300():
@@ -182,39 +139,6 @@ def get_300_helper(exchange, res):
         return res
     except:
         return res
-
-
-# def run(mode="alert_100"):
-#     """
-#     Running in the child process.
-#     """
-#     # SETTINGS["log.file"] = True
-#     # event_engine = EventEngine()
-#     # main_engine: MainEngine = MainEngine(event_engine)
-#     # main_engine.add_gateway(BinanceSpotGateway)
-#     # cta_engine: CtaEngine = main_engine.add_app(CtaStrategyApp)
-#     # main_engine.write_log("setup main engine")
-#     #
-#     # log_engine: LogEngine = main_engine.get_engine("log")
-#     # event_engine.register(EVENT_CTA_LOG, log_engine.process_log_event)
-#     # main_engine.write_log("register event listener")
-#     #
-#     # main_engine.connect(usdt_gateway_setting, "BINANCE_SPOT")
-#     # main_engine.write_log("connect binance spot gate way")
-#     # sleep(2)
-#     #
-#     # cta_engine.init_engine()
-#     # main_engine.write_log("set up cta engine")
-#     # tg_bot.send_message(f"start {mode}")
-#
-#     if mode == "alert_100":
-#         alert_100()
-#     # elif mode == "alert_500":
-#     #     alert_500(cta_engine, main_engine)
-#     # elif mode == "alert_300":
-#     #     alert_300(cta_engine, main_engine)
-#
-#     sleep(10)
 
 
 if __name__ == "__main__":
