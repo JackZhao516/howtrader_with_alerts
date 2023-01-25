@@ -158,7 +158,7 @@ class BinanceIndicatorAlert:
                     i = self.update_close(time_frame, i, exchange, close)
             logging.warning(f"Download {exchange} {time_frame}h klines done")
             # self.close_lock.acquire()
-            # # logging.warning(f"{exchange} {time_frame}h:{self.close[exchange.lower()][str(time_frame)]}")
+            # logging.warning(f"{exchange} {time_frame}h:{self.close[exchange.lower()][str(time_frame)]}")
             # self.close_lock.release()
 
     def update_close(self, time_frame, i, exchange, close=None, copy=False, log=False):
@@ -242,7 +242,7 @@ class BinanceIndicatorAlert:
                 )
 
         if self.alert_type == "alert_300":
-            sleep(140)
+            sleep(60*5.1)
         else:
             sleep(self.execution_time)
         client.stop()
@@ -281,7 +281,10 @@ class BinanceIndicatorAlert:
             close = float(msg["k"]["c"])
             self.close_lock.acquire()
             if self.alert_type == "alert_300":
+                print(f"close: {close}, ma: {np.mean(self.close[exchange]['12'])}")
                 if close > np.mean(self.close[exchange]["12"]):
+                    logging.warning(f"{exchange} over h12"
+                                    f"close: {close}, ma: {np.mean(self.close[exchange]['12'])}")
                     self.spot_over_h12_300.add(exchange.upper())
                 else:
                     if exchange.upper() in self.spot_over_h12_300:
@@ -299,9 +302,9 @@ class BinanceIndicatorAlert:
             elif self.alert_type == "alert_500":
                 self.alert_helper_1m(close, 4, exchange)
                 self.alert_helper_1m(close, 24, exchange)
-            self.last_close_1m[exchange] = close
+            # self.last_close_1m[exchange] = close
             # logging.warning(f"{exchange} 1m current {self.last_close_1m[exchange]}")
-            self.close_lock.release()
+            # self.close_lock.release()
 
     def alert_helper_1m(self, close, timeframe, exchange):
         timeframe = str(timeframe)
@@ -326,4 +329,5 @@ if __name__ == "__main__":
     print(f"---------------------------------------------------{len(ex)}")
     alert = BinanceIndicatorAlert(ex, "alert_300", tg_type="TEST")
     ex, c, d = alert.run()
+    print(ex, c, d)
     # alert.download_past_klines(12)
