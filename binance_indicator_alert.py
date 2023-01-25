@@ -219,9 +219,21 @@ class BinanceIndicatorAlert:
         id_count = 0
         client = Client()
         client.start()
-        client.kline(
-            symbol=self.exchanges, id=id_count, interval="1m", callback=self.minute_alert
-        )
+        l, r = self.exchanges[:len(self.exchanges) // 2], self.exchanges[len(self.exchanges) // 2:]
+        if self.alert_type == "alert_300":
+            client.kline(
+                symbol=l, id=id_count, interval="1m", callback=self.minute_alert
+            )
+            id_count += 1
+            sleep(1)
+            client.kline(
+                symbol=r, id=id_count, interval="1m", callback=self.minute_alert
+            )
+        else:
+            client.kline(
+                symbol=self.exchanges, id=id_count, interval="1m", callback=self.minute_alert
+            )
+
         id_count += 1
         sleep(5)
 
@@ -242,7 +254,7 @@ class BinanceIndicatorAlert:
                 )
 
         if self.alert_type == "alert_300":
-            sleep(60*5.1)
+            sleep(60*15)
         else:
             sleep(self.execution_time)
         client.stop()
@@ -280,9 +292,10 @@ class BinanceIndicatorAlert:
         if msg["s"].lower() in self.exchanges_set and msg["k"]["x"] and msg["k"]["i"] == "1m":
             exchange = msg["s"].lower()
             close = float(msg["k"]["c"])
-            self.close_lock.acquire()
+            # self.close_lock.acquire()
             if self.alert_type == "alert_300":
-                # print(f"close: {close}, ma: {np.mean(self.close[exchange]['12'])}")
+                self.close_lock.acquire()
+                print(f"close: {close}, ma: {np.mean(self.close[exchange]['12'])}")
                 if close > np.mean(self.close[exchange]["12"]):
                     logging.warning(f"{exchange} over h12"
                                     f"close: {close}, ma: {np.mean(self.close[exchange]['12'])}")
@@ -292,17 +305,17 @@ class BinanceIndicatorAlert:
                         self.spot_over_h12_300.remove(exchange.upper())
                 self.close_lock.release()
                 return
-
-            if self.last_close_1m[exchange] == 0.0:
-                self.last_close_1m[exchange] = close
-                self.close_lock.release()
-                return
-            if self.alert_type == "alert_100":
-                self.alert_helper_1m(close, 4, exchange)
-                self.alert_helper_1m(close, 12, exchange)
-            elif self.alert_type == "alert_500":
-                self.alert_helper_1m(close, 4, exchange)
-                self.alert_helper_1m(close, 24, exchange)
+            #
+            # if self.last_close_1m[exchange] == 0.0:
+            #     self.last_close_1m[exchange] = close
+            #     self.close_lock.release()
+            #     return
+            # if self.alert_type == "alert_100":
+            #     self.alert_helper_1m(close, 4, exchange)
+            #     self.alert_helper_1m(close, 12, exchange)
+            # elif self.alert_type == "alert_500":
+            #     self.alert_helper_1m(close, 4, exchange)
+            #     self.alert_helper_1m(close, 24, exchange)
             # self.last_close_1m[exchange] = close
             # logging.warning(f"{exchange} 1m current {self.last_close_1m[exchange]}")
             # self.close_lock.release()
