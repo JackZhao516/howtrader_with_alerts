@@ -157,9 +157,9 @@ class BinanceIndicatorAlert:
                     cur_timestamp = close_timestamp
                     i = self.update_close(time_frame, i, exchange, close)
             logging.warning(f"Download {exchange} {time_frame}h klines done")
-            # self.close_lock.acquire()
-            # logging.warning(f"{exchange} {time_frame}h:{self.close[exchange.lower()][str(time_frame)]}")
-            # self.close_lock.release()
+            self.close_lock.acquire()
+            logging.warning(f"{exchange} {time_frame}h:{np.mean(self.close[exchange.lower()][str(time_frame)])}")
+            self.close_lock.release()
 
     def update_close(self, time_frame, i, exchange, close=None, copy=False, log=False):
         self.close_lock.acquire()
