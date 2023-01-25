@@ -374,12 +374,15 @@ def close_all_threads(thread):
 
 
 if __name__ == '__main__':
+    test = CoinGecKo12H(["bitcoin"], ["BTC"], "TEST")
+    res = test.run()
 
-    from crawl_coingecko import CoinGecKo
-    cg = CoinGecKo("TEST")
-    exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
-    print(coin_ids, coin_symbols)
-    t = alert_coins(coin_ids, coin_symbols, "alert_100", "TEST")
+
+    # from crawl_coingecko import CoinGecKo
+    # cg = CoinGecKo("TEST")
+    # exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=100)
+    # print(coin_ids, coin_symbols)
+    # t = alert_coins(coin_ids, coin_symbols, "alert_100", "TEST")
     # sleep(1800)
     # print("here")
     # close_all_threads(t)

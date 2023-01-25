@@ -2,6 +2,7 @@ import logging
 import requests
 import datetime
 import threading
+import time
 
 import urllib3
 import numpy as np
@@ -78,11 +79,12 @@ class CoinGecKo:
         exchanges = {exchange['symbol'] for exchange in response['symbols']}
         return exchanges
 
-    def get_all_popular_exchanges(self, time_on_binance=102):
+    def get_all_popular_exchanges(self, time_on_binance=102, num_threads=100):
         """
         BTC, ETH, USDT, BUSD exchanges older than time_on_binance days
         """
         exchanges = self.get_all_exchanges()
+        print(f"{len(exchanges)} exchanges")
         res = []
 
         # choose BTC, ETH, USDT, BUSD exchanges
@@ -100,23 +102,36 @@ class CoinGecKo:
 
         threads = []
         # res = ["BTCUSDT"]
-        for exchange in res:
+
+        incr = len(res) // num_threads
+        res = [res[i:i + incr] for i in range(0, len(res), incr)]
+
+        for exchanges in res:
             t = threading.Thread(target=self.get_all_popular_exchanges_helper,
-                                 args=(exchange, start_time_str, start_time_now_str))
+                                 args=(exchanges, start_time_str, start_time_now_str))
             threads.append(t)
             t.start()
-            # sleep(0.1)
+
         for t in threads:
             t.join()
         res = list(self.popular_exchanges)
         print(res)
         return res
 
-    def get_all_popular_exchanges_helper(self, exchange, start_time_str, start_time_now_str):
+    def get_all_popular_exchanges_helper(self, exchanges, start_time_str, start_time_now_str):
+        for exchange in exchanges:
+            try:
+                self.validate_popular_exchange_helper(exchange, start_time_str, start_time_now_str)
+            except Exception as e:
+                print(e)
+                continue
+
+    def validate_popular_exchange_helper(self, exchange, start_time_str, start_time_now_str):
         """
         Helper function for get_all_popular_exchanges
         """
         time_frames = ["12h", "4h", "1d"]
+
         for time_frame in time_frames:
             url = f"{self.DATA_DOWNLOAD_ROOT_URL}{exchange}/{time_frame}/" \
                   f"{exchange}-{time_frame}-{start_time_str}.zip"
@@ -130,6 +145,7 @@ class CoinGecKo:
                 self.popular_exchanges_lock.acquire()
                 self.popular_exchanges.remove(exchange)
                 self.popular_exchanges_lock.release()
+
                 return
 
     def get_500_usdt_exchanges(self, market_cap=True):
@@ -219,8 +235,9 @@ class CoinGecKo:
 
 
 if __name__ == '__main__':
-    coin = CoinGecKo(alert_type='TEST')
-    # exchanges = coin.get_all_popular_exchanges()
+    coin = CoinGecKo(tg_type='TEST')
+    exchanges = coin.get_all_popular_exchanges()
+    print(len(exchanges))
     # exchanges = set(exchanges)
     # coins = ["APTUSDT", "APTBTC", "BTTUSDT", "BTTBTC", "LUNABTC", "LUNAETH",
     #          "DAIBTC", "DAIUSDT", "HNTBTC", "HNTUSDT", "OSMOBTC", "OSMOUSDT",
@@ -230,6 +247,6 @@ if __name__ == '__main__':
     # for c in coins:
     #     if c in exchanges:
     #         print(c)
-
-    ex, c, _ = coin.get_coins_with_weekly_volume_increase(volume_threshold=1.3)
-    print(len(ex), len(c))
+    #
+    # ex, c, _ = coin.get_coins_with_weekly_volume_increase(volume_threshold=1.3)
+    # print(len(ex), len(c))

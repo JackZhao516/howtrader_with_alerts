@@ -25,11 +25,16 @@ class BinanceIndicatorAlert:
     MAX_ERROR = 5
     STABLE_EXCHANGES = {"wbtcbtc"}
     config_logging(logging, logging.INFO)
+    csv_dir = os.path.join(os.getcwd(), "klines_csv")
+    try:
+        os.mkdir(csv_dir)
+    except FileExistsError:
+        pass
 
     def __init__(self, exchanges, alert_type="alert_100", execution_time=86400 * 7, tg_type="CG_ALERT"):
         exchanges = [exchange.lower() for exchange in exchanges]
         exchanges.sort()
-
+        self.i = 0
         # self.id_count = id_count
         self.exchanges = exchanges
         self.exchanges_set = set(exchanges)
@@ -66,100 +71,97 @@ class BinanceIndicatorAlert:
 
         self.tg_bot = TelegramBot(tg_type)
 
-    def download_past_klines(self, time_frame, exchange):
+    def download_past_klines(self, time_frame, exchange_list):
         """
         Download and store all the kline data until last hour
         """
-        logging.warning(f"Downloading past klines {time_frame}h for {exchange}")
-        exchange = exchange.upper()
-        days_delta = time_frame * self.window // 24 + 1
-        start_time = datetime.datetime.now() - datetime.timedelta(days=days_delta)
-        time_frame_str = f"{time_frame}h" if int(time_frame) < 24 else "1d"
-        i = 0
-        error = 0
-        csv_dir = os.path.join(os.getcwd(), "klines_csv")
-        cur_timestamp = None
+        for exchange in exchange_list:
+            self.i += 1
+            print(self.i, exchange)
+            logging.warning(f"Downloading past klines {time_frame}h for {exchange}")
+            exchange = exchange.upper()
+            days_delta = time_frame * self.window // 24 + 1
+            start_time = datetime.datetime.now() - datetime.timedelta(days=days_delta)
+            time_frame_str = f"{time_frame}h" if int(time_frame) < 24 else "1d"
+            i = 0
+            error = 0
+            cur_timestamp = None
 
-        try:
-            os.mkdir(csv_dir)
-        except FileExistsError:
-            pass
+            while days_delta > 0:
+                # sleep(1)
+                days_delta -= 1
+                start_time_str = start_time.strftime("%Y-%m-%d")
+                start_time += datetime.timedelta(days=1)
+                url = f"{self.DATA_DOWNLOAD_ROOT_URL}{exchange}/{time_frame_str}/" \
+                      f"{exchange}-{time_frame_str}-{start_time_str}.zip"
 
-        while days_delta > 0:
-            # sleep(1)
-            days_delta -= 1
-            start_time_str = start_time.strftime("%Y-%m-%d")
-            start_time += datetime.timedelta(days=1)
-            url = f"{self.DATA_DOWNLOAD_ROOT_URL}{exchange}/{time_frame_str}/" \
-                  f"{exchange}-{time_frame_str}-{start_time_str}.zip"
+                try:
+                    # download single day csv file
+                    response = requests.get(url, timeout=100)
+                    open(f"{exchange}.zip", "wb").write(response.content)
+                    with zipfile.ZipFile(f"{exchange}.zip", "r") as zip_ref:
+                        zip_ref.extractall(self.csv_dir)
 
-            try:
-                # download single day csv file
-                response = requests.get(url, timeout=100)
-                open(f"{exchange}.zip", "wb").write(response.content)
-                with zipfile.ZipFile(f"{exchange}.zip", "r") as zip_ref:
-                    zip_ref.extractall(csv_dir)
+                    files = glob.glob(f"{self.csv_dir}/*.csv")
+                    target_csv = os.path.join(self.csv_dir, f"{exchange}-{time_frame_str}-{start_time_str}.csv")
+                    if target_csv not in files:
+                        logging.error(f"Error: {len(files)} files found")
+                        raise Exception("No csv file found")
 
-                files = glob.glob(f"{csv_dir}/*.csv")
-                target_csv = os.path.join(csv_dir, f"{exchange}-{time_frame_str}-{start_time_str}.csv")
-                if target_csv not in files:
-                    logging.error(f"Error: {len(files)} files found")
-                    raise Exception("No csv file found")
+                    # process csv file and store kline information
+                    with open(target_csv, "r") as f:
+                        rows = [row for row in csv.reader(f)]
+                        for row in rows:
+                            start_timestamp, close_timestamp, close = int(row[0]), int(row[6]), float(row[4])
+                            if cur_timestamp is None or start_timestamp == cur_timestamp + 1:
+                                cur_timestamp = close_timestamp
+                                i = self.update_close(time_frame, i, exchange, close)
+                            else:
+                                # missing data
+                                while cur_timestamp + 1 < start_timestamp:
+                                    i = self.update_close(time_frame, i, exchange, copy=True)
+                                    cur_timestamp += time_frame * 3600 * 1000
+                                cur_timestamp = close_timestamp
+                                i = self.update_close(time_frame, i, exchange, close)
+                    os.remove(target_csv)
 
-                # process csv file and store kline information
-                with open(target_csv, "r") as f:
-                    rows = [row for row in csv.reader(f)]
-                    for row in rows:
-                        start_timestamp, close_timestamp, close = int(row[0]), int(row[6]), float(row[4])
-                        if cur_timestamp is None or start_timestamp == cur_timestamp + 1:
-                            cur_timestamp = close_timestamp
-                            i = self.update_close(time_frame, i, exchange, close)
-                        else:
-                            # missing data
-                            while cur_timestamp + 1 < start_timestamp:
-                                i = self.update_close(time_frame, i, exchange, copy=True)
-                                cur_timestamp += time_frame * 3600 * 1000
-                            cur_timestamp = close_timestamp
-                            i = self.update_close(time_frame, i, exchange, close)
-                os.remove(target_csv)
+                except Exception as e:
+                    if error > self.MAX_ERROR:
+                        return
+                    error += 1
+                    for count in range(24 // time_frame):
+                        i = self.update_close(time_frame, i, exchange, copy=True)
+                        if i != 0:
+                            cur_timestamp += time_frame * 3600 * 1000
 
-            except Exception as e:
-                if error > self.MAX_ERROR:
-                    return
-                error += 1
-                for count in range(24 // time_frame):
-                    i = self.update_close(time_frame, i, exchange, copy=True)
-                    if i != 0:
+            os.remove(f"{exchange}.zip")
+            # using http request to download the latest day
+            cur_timestamp += 1
+            http_url = f"{self.HTTP_URL}symbol={exchange}&interval={time_frame_str}" \
+                       f"&startTime={cur_timestamp}&limit=1000"
+            latest = list(requests.get(http_url).json())
+
+            if len(latest) == 0:
+                return
+            # logging.info(f"{latest}")
+            latest = latest[:-1]
+
+            for candle in latest:
+                start_timestamp, close_timestamp, close = int(candle[0]), int(candle[6]), float(candle[4])
+                if cur_timestamp == start_timestamp:
+                    cur_timestamp = close_timestamp + 1
+                    i = self.update_close(time_frame, i, exchange, close)
+                else:
+                    # missing data
+                    while cur_timestamp < start_timestamp:
+                        i = self.update_close(time_frame, i, exchange, copy=True)
                         cur_timestamp += time_frame * 3600 * 1000
-
-        os.remove(f"{exchange}.zip")
-        # using http request to download the latest day
-        cur_timestamp += 1
-        http_url = f"{self.HTTP_URL}symbol={exchange}&interval={time_frame_str}" \
-                   f"&startTime={cur_timestamp}&limit=1000"
-        latest = list(requests.get(http_url).json())
-
-        if len(latest) == 0:
-            return
-        # logging.info(f"{latest}")
-        latest = latest[:-1]
-
-        for candle in latest:
-            start_timestamp, close_timestamp, close = int(candle[0]), int(candle[6]), float(candle[4])
-            if cur_timestamp == start_timestamp:
-                cur_timestamp = close_timestamp + 1
-                i = self.update_close(time_frame, i, exchange, close)
-            else:
-                # missing data
-                while cur_timestamp < start_timestamp:
-                    i = self.update_close(time_frame, i, exchange, copy=True)
-                    cur_timestamp += time_frame * 3600 * 1000
-                cur_timestamp = close_timestamp
-                i = self.update_close(time_frame, i, exchange, close)
-        logging.warning(f"Download {exchange} {time_frame}h klines done")
-        self.close_lock.acquire()
-        # logging.warning(f"{exchange} {time_frame}h:{self.close[exchange.lower()][str(time_frame)]}")
-        self.close_lock.release()
+                    cur_timestamp = close_timestamp
+                    i = self.update_close(time_frame, i, exchange, close)
+            logging.warning(f"Download {exchange} {time_frame}h klines done")
+            # self.close_lock.acquire()
+            # # logging.warning(f"{exchange} {time_frame}h:{self.close[exchange.lower()][str(time_frame)]}")
+            # self.close_lock.release()
 
     def update_close(self, time_frame, i, exchange, close=None, copy=False, log=False):
         self.close_lock.acquire()
@@ -186,15 +188,17 @@ class BinanceIndicatorAlert:
         self.close_lock.release()
         return i
 
-    def download_past_klines_threads(self, time_frame):
+    def download_past_klines_threads(self, time_frame, num_threads=20):
         """
         Download and store all the kline data until last hour
         """
         threads = []
-        for exchange in self.exchanges:
-            if exchange in self.STABLE_EXCHANGES:
-                continue
-            t = threading.Thread(target=self.download_past_klines, args=(time_frame, exchange))
+        exchanges = [exchange for exchange in self.exchanges if exchange not in self.STABLE_EXCHANGES]
+        incr = len(exchanges) // num_threads
+        exchanges = [exchanges[i:i + incr] for i in range(0, len(exchanges), incr)]
+
+        for exchange_list in exchanges:
+            t = threading.Thread(target=self.download_past_klines, args=(time_frame, exchange_list))
             threads.append(t)
             t.start()
             # sleep(1)
@@ -318,5 +322,10 @@ class BinanceIndicatorAlert:
 
 
 if __name__ == "__main__":
-    alert = BinanceIndicatorAlert(["BTCUSDT", "ETHUSDT"], "500", tg_type="TEST")
+    from crawl_coingecko import CoinGecKo
+    cg = CoinGecKo()
+    ex, _, _ = cg.get_exchanges(num=300)
+    print(f"---------------------------------------------------{len(ex)}")
+    alert = BinanceIndicatorAlert(ex, "alert_300", tg_type="TEST")
+    ex, c, d = alert.run()
     # alert.download_past_klines(12)
