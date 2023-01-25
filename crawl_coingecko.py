@@ -22,8 +22,8 @@ class CoinGecKo:
         self.popular_exchanges_lock = threading.Lock()
 
     def get_exchanges(self, num=300):
-        # exchanges = set(self.get_all_popular_exchanges())
-        exchanges = set(self.get_all_exchanges())
+        exchanges = set(self.get_all_popular_exchanges())
+        # exchanges = set(self.get_all_exchanges())
         res = []
         coingeco_coins = []
         coingeco_names = []
@@ -79,7 +79,7 @@ class CoinGecKo:
         exchanges = {exchange['symbol'] for exchange in response['symbols']}
         return exchanges
 
-    def get_all_popular_exchanges(self, time_on_binance=102, num_threads=100):
+    def get_all_popular_exchanges(self, time_on_binance=102, num_threads=50):
         """
         BTC, ETH, USDT, BUSD exchanges older than time_on_binance days
         """
