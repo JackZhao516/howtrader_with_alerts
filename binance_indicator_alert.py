@@ -323,6 +323,7 @@ class BinanceIndicatorAlert:
 
 
 if __name__ == "__main__":
+    logging.info("test")
     from crawl_coingecko import CoinGecKo
     cg = CoinGecKo()
     ex, _, _ = cg.get_exchanges(num=300)

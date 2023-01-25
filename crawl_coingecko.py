@@ -22,8 +22,8 @@ class CoinGecKo:
         self.popular_exchanges_lock = threading.Lock()
 
     def get_exchanges(self, num=300):
-        exchanges = set(self.get_all_popular_exchanges())
-        # exchanges = set(self.get_all_exchanges())
+        # exchanges = set(self.get_all_popular_exchanges())
+        exchanges = set(self.get_all_exchanges())
         res = []
         coingeco_coins = []
         coingeco_names = []
