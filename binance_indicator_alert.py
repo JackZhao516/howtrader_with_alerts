@@ -76,8 +76,6 @@ class BinanceIndicatorAlert:
         Download and store all the kline data until last hour
         """
         for exchange in exchange_list:
-            self.i += 1
-            print(self.i, exchange)
             logging.warning(f"Downloading past klines {time_frame}h for {exchange}")
             exchange = exchange.upper()
             days_delta = time_frame * self.window // 24 + 1
