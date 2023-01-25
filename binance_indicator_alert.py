@@ -222,12 +222,12 @@ class BinanceIndicatorAlert:
         l, r = self.exchanges[:len(self.exchanges) // 2], self.exchanges[len(self.exchanges) // 2:]
         if self.alert_type == "alert_300":
             client.kline(
-                symbol=l, id=id_count, interval="1m", callback=self.minute_alert
+                symbol=l, id=id_count, interval="1m", callback=self.minute_alert_300
             )
             id_count += 1
             sleep(1)
             client.kline(
-                symbol=r, id=id_count, interval="1m", callback=self.minute_alert
+                symbol=r, id=id_count, interval="1m", callback=self.minute_alert_300
             )
         else:
             client.kline(
@@ -284,7 +284,7 @@ class BinanceIndicatorAlert:
         if msg["s"].lower() in self.exchanges_set and msg["k"]["x"] and msg["k"]["i"] == "1d":
             self.update_close("24", self.window, msg["s"], float(msg["k"]["c"]))
 
-    def minute_alert(self, msg):
+    def minute_alert_300(self, msg):
         # logging.warning(f"minute alert: {msg}")
         if "stream" not in msg or "data" not in msg or "k" not in msg["data"]:
             return
@@ -305,20 +305,30 @@ class BinanceIndicatorAlert:
                         self.spot_over_h12_300.remove(exchange.upper())
                 self.close_lock.release()
                 return
-            #
-            # if self.last_close_1m[exchange] == 0.0:
-            #     self.last_close_1m[exchange] = close
-            #     self.close_lock.release()
-            #     return
-            # if self.alert_type == "alert_100":
-            #     self.alert_helper_1m(close, 4, exchange)
-            #     self.alert_helper_1m(close, 12, exchange)
-            # elif self.alert_type == "alert_500":
-            #     self.alert_helper_1m(close, 4, exchange)
-            #     self.alert_helper_1m(close, 24, exchange)
-            # self.last_close_1m[exchange] = close
-            # logging.warning(f"{exchange} 1m current {self.last_close_1m[exchange]}")
-            # self.close_lock.release()
+
+    def minute_alert(self, msg):
+        # logging.warning(f"minute alert: {msg}")
+        if "stream" not in msg or "data" not in msg or "k" not in msg["data"]:
+            return
+        msg = msg["data"]
+        if msg["s"].lower() in self.exchanges_set and msg["k"]["x"] and msg["k"]["i"] == "1m":
+            exchange = msg["s"].lower()
+            close = float(msg["k"]["c"])
+            self.close_lock.acquire()
+            if self.last_close_1m[exchange] == 0.0:
+                self.last_close_1m[exchange] = close
+                self.close_lock.release()
+                return
+            if self.alert_type == "alert_100":
+                self.alert_helper_1m(close, 4, exchange)
+                self.alert_helper_1m(close, 12, exchange)
+            elif self.alert_type == "alert_500":
+                self.alert_helper_1m(close, 4, exchange)
+                self.alert_helper_1m(close, 24, exchange)
+            self.last_close_1m[exchange] = close
+            logging.warning(f"{exchange} 1m current {self.last_close_1m[exchange]}")
+            self.close_lock.release()
+
 
     def alert_helper_1m(self, close, timeframe, exchange):
         timeframe = str(timeframe)
