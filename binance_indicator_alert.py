@@ -247,6 +247,7 @@ class BinanceIndicatorAlert:
             sleep(self.execution_time)
         client.stop()
 
+        logging.warning(f"{self.spot_over_h12_300} done")
         if self.alert_type == "alert_300":
             return update_coins_exchanges_txt_300(self.spot_over_h12_300, "exchanges")
 
@@ -281,7 +282,7 @@ class BinanceIndicatorAlert:
             close = float(msg["k"]["c"])
             self.close_lock.acquire()
             if self.alert_type == "alert_300":
-                print(f"close: {close}, ma: {np.mean(self.close[exchange]['12'])}")
+                # print(f"close: {close}, ma: {np.mean(self.close[exchange]['12'])}")
                 if close > np.mean(self.close[exchange]["12"]):
                     logging.warning(f"{exchange} over h12"
                                     f"close: {close}, ma: {np.mean(self.close[exchange]['12'])}")
@@ -328,7 +329,7 @@ if __name__ == "__main__":
     cg = CoinGecKo()
     ex, _, _ = cg.get_exchanges(num=300)
     print(f"---------------------------------------------------{len(ex)}")
-    ex = ex[:100]
+    ex = ex[:40]
     alert = BinanceIndicatorAlert(ex, "alert_300", tg_type="TEST")
     ex, c, d = alert.run()
     print(ex, c, d)

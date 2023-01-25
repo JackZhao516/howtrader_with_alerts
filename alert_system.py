@@ -8,7 +8,7 @@ from binance_indicator_alert import BinanceIndicatorAlert
 
 MODE = "CG_SUM"
 tg_bot = TelegramBot(MODE)
-cg = CoinGecKo(MODE)
+cg = CoinGecKo("TEST")
 #
 # usdt_gateway_setting = {
 #         "key": "ZaipNokA3CkFb0fQsp7D2mqmev9RAHPrgW0SnUXVhReXfgTujN7SJB0Wu4atl20M",
