@@ -328,6 +328,7 @@ if __name__ == "__main__":
     cg = CoinGecKo()
     ex, _, _ = cg.get_exchanges(num=300)
     print(f"---------------------------------------------------{len(ex)}")
+    ex = ex[:100]
     alert = BinanceIndicatorAlert(ex, "alert_300", tg_type="TEST")
     ex, c, d = alert.run()
     print(ex, c, d)
