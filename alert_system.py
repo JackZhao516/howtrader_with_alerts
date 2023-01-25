@@ -40,12 +40,12 @@ def alert_indicator(alert_type="alert_100"):
 def alert_300():
     logging.info("alert_300 start")
     exchanges, coin_ids, coin_symbols = cg.get_exchanges(num=300)
-    logging.warning(f"exchanges: {len(exchanges)}, coins: {len(coin_ids)}")
     logging.warning("start coingecko alert")
     tg_type = "TEST"
     coingecko_res = CoinGecKo12H(coin_ids, coin_symbols, tg_type=tg_type)
     coins, newly_deleted_coins, newly_added_coins = coingecko_res.run()
     logging.warning(f"start binance indicator alert")
+    logging.warning(f"exchanges: {len(exchanges)}, coins: {len(coin_ids)}")
     binance_alert = BinanceIndicatorAlert(exchanges, alert_type="alert_300", tg_type=tg_type)
     exchanges, newly_deleted_exchanges, newly_added_exchanges = binance_alert.run()
     coins.extend(exchanges)
