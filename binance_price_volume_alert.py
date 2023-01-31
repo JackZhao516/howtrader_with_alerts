@@ -50,10 +50,10 @@ class BinancePriceVolumeAlert:
         """
         For price change alert
         """
-        rate_threshold = 5.0
+        rate_threshold = 10.0
         while self.running:
             if self.exchange_count == self.max_exchange_count:
-                self.dict_lock.acquire()
+                self.price_lock.acquire()
                 self.exchange_count = 0
                 price_lists = [[k, v[0]] for k, v in self.price_dict.items()]
                 largest, smallest = [], []
@@ -88,11 +88,11 @@ class BinancePriceVolumeAlert:
                     self.tg_bot_price.safe_send_message(f"15 min top 5 negative price change in %: {smallest}")
                 # logging.info(f"exchange_count: {self.exchange_count}")
                 time.sleep(1)
-                self.dict_lock.release()
+                self.price_lock.release()
 
     def klines_alert(self):
         """
-        For volume/price alert
+        For price/volume alert
         main function
 
         alert if second and third bar are both ten times larger than first bar
@@ -112,9 +112,14 @@ class BinancePriceVolumeAlert:
             klines_client = Client()
             klines_client.start()
             klines_client.kline(
-                symbol=self.exchanges, id=id_count, interval="15m", callback=self.price_volume_alerts
+                symbol=self.exchanges, id=id_count, interval="15m", callback=self.volume_alerts
             )
             id_count += 1
+
+            time.sleep(5)
+            klines_client.kline(
+                symbol=self.exchanges, id=id_count, interval="1h", callback=self.price_alerts
+            )
 
             # time.sleep(88200.0 - ((time.time() - start_time) % 86400.0))
             time.sleep(86400.0 * 365)
@@ -130,9 +135,9 @@ class BinancePriceVolumeAlert:
                 raise e
             time.sleep(1)
 
-    def price_volume_alerts(self, msg):
+    def volume_alerts(self, msg):
         """
-        price/volume alert callback function
+        volume alert callback function
 
         alert if second bar is 10X first bar and third bar is 50X first bar
         alert if second bar is 50X first bar
@@ -187,17 +192,46 @@ class BinancePriceVolumeAlert:
             self.exchange_bar_dict[symbol] = [current_time, vol]
         # logging.info(exchange_bar_dict)
 
+        # # price alert
+        # self.exchange_count += 1
+        # self.max_exchange_count = max(self.exchange_count, self.max_exchange_count)
+        # # logging.info(f"exchange_count: {self.exchange_count}")
+        #
+        # if symbol not in self.price_dict:
+        #     self.price_dict[symbol] = [0.0, close]
+        # else:
+        #     self.price_dict[symbol][0] = (close / self.price_dict[symbol][1] - 1) * 100
+        #     self.price_dict[symbol][1] = close
+        self.dict_lock.release()
+
+    def price_alerts(self, msg):
+        """
+        For price alerts
+        """
+        # logging.info(f"msg: {msg}")
+        if "stream" not in msg or "data" not in msg or "k" not in msg["data"] or \
+                msg["data"]["k"]["x"] is False or msg["data"]["k"]["i"] != "1h":
+            return
+
+        if msg["data"]["k"]["s"].lower() not in self.exchanges:
+            return
+
+        kline = msg["data"]["k"]
+        symbol = kline["s"]
+        close = float(kline["c"])
+
+        self.price_lock.acquire()
         # price alert
         self.exchange_count += 1
         self.max_exchange_count = max(self.exchange_count, self.max_exchange_count)
-        # logging.info(f"exchange_count: {self.exchange_count}")
+        logging.info(f"exchange_count: {self.exchange_count}")
 
         if symbol not in self.price_dict:
             self.price_dict[symbol] = [0.0, close]
         else:
             self.price_dict[symbol][0] = (close / self.price_dict[symbol][1] - 1) * 100
             self.price_dict[symbol][1] = close
-        self.dict_lock.release()
+        self.price_lock.release()
 
 
 if __name__ == "__main__":
