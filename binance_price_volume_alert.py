@@ -52,7 +52,7 @@ class BinancePriceVolumeAlert:
         """
         rate_threshold = 10.0
         while self.running:
-            if self.exchange_count == self.max_exchange_count:
+            if self.exchange_count == 350:
                 self.price_lock.acquire()
                 self.exchange_count = 0
                 price_lists = [[k, v[0]] for k, v in self.price_dict.items()]
